@@ -28,7 +28,7 @@ sudo rpm --import https://mirror.go-repo.io/centos/RPM-GPG-KEY-GO-REPO
 curl -s https://mirror.go-repo.io/centos/go-repo.repo | sudo tee /etc/yum.repos.d/go-repo.repo
 
 # TODO: find the GPG key for SIG-Virt stuff
-sudo yum install -y --nogpg libvirt libvirt-devel libvirt-client git golang libvirt-daemon-kvm qemu-kvm bind-utils
+sudo yum install -y --nogpg libvirt libvirt-devel libvirt-client git golang libvirt-daemon-kvm qemu-kvm bind-utils jq
 
 # Enable IP forwarding
 # https://github.com/openshift/installer/blob/master/docs/dev/libvirt-howto.md#enable-ip-forwarding

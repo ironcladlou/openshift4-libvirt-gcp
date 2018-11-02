@@ -21,5 +21,5 @@ export OPENSHIFT_INSTALL_PLATFORM=libvirt
 export OPENSHIFT_INSTALL_SSH_PUB_KEY_PATH=$HOME/.ssh/id_rsa.pub
 export OPENSHIFT_INSTALL_PULL_SECRET_PATH=$HOME/.openshift-pull-secret.json
 export OPENSHIFT_INSTALL_LIBVIRT_URI="qemu+tcp://192.168.122.1/system"
-export OPENSHIFT_INSTALL_LIBVIRT_IMAGE="file://$HOME/rhcos-qemu.qcow2"
+export OPENSHIFT_INSTALL_LIBVIRT_IMAGE="file://$HOME/redhat-coreos-maipo-latest-qemu.qcow2"
 openshift-install create cluster --log-level=debug --dir="$CLUSTER_DIR" 2>&1 | tee /tmp/installer.log

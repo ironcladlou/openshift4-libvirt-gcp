@@ -23,11 +23,7 @@ plugin_cache_dir = "$HOME/.terraform.d/plugin-cache"
 EOF
 GOBIN=~/.terraform.d/plugins go get -u github.com/dmacvicar/terraform-provider-libvirt
 
-# TODO: Pull this from a public place
-echo "Downloading RHCOS image"
-gsutil cp gs://rhcos/rhcos-qemu.qcow2.gz $HOME
-cd $HOME
-gunzip $HOME/rhcos-qemu.qcow2.gz
+$HOME/tools/update-rhcos-image.sh
 
 echo "Installing oc client"
 cd $HOME
