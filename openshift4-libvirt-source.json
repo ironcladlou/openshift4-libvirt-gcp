@@ -1,0 +1,19 @@
+{
+  "variables": {
+    "image_family": "openshift4-libvirt-source",
+    "source_image_family": "centos-7",
+    "project": "openshift-gce-devel",
+    "zone": "us-east1-c"
+  },
+  "builders": [
+    {
+      "type": "googlecompute",
+      "project_id": "{{ user `project` }}",
+      "zone": "{{ user `zone` }}",
+      "source_image_family": "{{ user `source_image_family` }}",
+      "image_family": "{{ user `image_family` }}",
+      "image_licenses": ["projects/vm-options/global/licenses/enable-vmx"],
+      "ssh_username": "packer"
+    }
+  ]
+}

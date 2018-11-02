@@ -1,0 +1,27 @@
+{
+  "variables": {
+    "image_family": "openshift4-libvirt",
+    "source_image_family": "openshift4-libvirt-source",
+    "project": "openshift-gce-devel",
+    "zone": "us-east1-c"
+  },
+  "builders": [
+    {
+      "type": "googlecompute",
+      "project_id": "{{ user `project` }}",
+      "zone": "{{ user `zone` }}",
+      "source_image_family": "{{ user `source_image_family` }}",
+      "image_family": "{{ user `image_family` }}",
+      "ssh_username": "packer",
+      "min_cpu_platform": "Intel Haswell",
+      "disk_type": "pd-ssd",
+      "disk_size": 256
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "script": "provision.sh"
+    }
+  ]
+}
