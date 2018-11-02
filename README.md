@@ -2,9 +2,9 @@
 
 Run an [OpenShift 4.0](https://github.com/openshift/installer) cluster on a single GCP instance using nested virtualization.
 
-## Creating an instance
+## Create a cluster
 
-This assumes images are built in the desired region.
+First, launch a VM. This assumes images are built in the desired region.
 
 ```shell
 $ gcloud compute instances create $INSTANCE \
@@ -12,17 +12,23 @@ $ gcloud compute instances create $INSTANCE \
   --machine-type n1-standard-8 --min-cpu-platform "Intel Haswell" \
   --boot-disk-type pd-ssd --boot-disk-size 256GB \
   --metadata-from-file openshift-pull-secret=openshift-pull-secret.json
+```
 
+Next, do some post-provisioning. *Only do this once during the life of the VM.*
+
+```shell
 $ gcloud compute scp --recurse tools $INSTANCE:~/tools
 $ gcloud compute ssh $INSTANCE --command '~/tools/post-provision.sh'
 ```
 
-# Running the installer
+Now you can run the installer.
 
 ```shell
 $ gcloud compute ssh $INSTANCE
-$ ~/tools/creater-cluster.sh nested
+$ ~/tools/create-cluster.sh nested
 ```
+
+The `create-cluster.sh` helper is for convenience. Feel free to run the installer directly.
 
 ## Building images
 

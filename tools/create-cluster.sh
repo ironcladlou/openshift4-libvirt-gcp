@@ -2,7 +2,7 @@
 
 NAME="$1"
 if [ -z "$NAME" ]; then
-  echo "usage: create-libvirt.sh <name>"
+  echo "usage: create-cluster.sh <name>"
   exit 1
 fi
 
