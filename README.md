@@ -1,36 +1,48 @@
 # OpenShift 4.0 libvirt on GCP
 
-Run an [OpenShift 4.0](https://github.com/openshift/installer) cluster on a single GCP instance using nested virtualization.
+Create an [OpenShift 4.0](https://github.com/openshift/installer) cluster in a single GCP instance.
 
 ## Create a cluster
 
-First, launch a VM. This assumes images are built in the desired region.
+**If the images are built and available in your project/zone, all you need to get started is the `gcloud` CLI tool.**
+
+First, launch an instance.
 
 ```shell
 $ gcloud compute instances create $INSTANCE \
-  --zone us-east1-c --image-family openshift4-libvirt \
-  --machine-type n1-standard-8 --min-cpu-platform "Intel Haswell" \
+  --image-family openshift4-libvirt \
+  --zone us-east1-c \
+  --min-cpu-platform "Intel Haswell" \
+  --machine-type n1-standard-8 \
   --boot-disk-type pd-ssd --boot-disk-size 256GB \
   --metadata-from-file openshift-pull-secret=openshift-pull-secret.json
 ```
 
-Next, do some post-provisioning. *Only do this once during the life of the VM.*
+Connect to the instance using SSH and create a cluster named `nested`.
 
 ```shell
-$ gcloud compute scp --recurse tools $INSTANCE:~/tools
-$ gcloud compute ssh $INSTANCE --command '~/tools/post-provision.sh'
+$ create-cluster nested
 ```
 
-Now you can run the installer.
+Interact with your cluster with `oc`.
+
+### Updating the installer
+
+Tools can be updated right from the instance itself.
+
+Update the OpenShift installer from `master` using:
 
 ```shell
-$ gcloud compute ssh $INSTANCE
-$ ~/tools/create-cluster.sh nested
+$ update-installer
 ```
 
-The `create-cluster.sh` helper is for convenience. Feel free to run the installer directly.
+Update the RHCOS image using:
 
-## Building images
+```shell
+$ update-rhcos-image
+```
+
+## Images
 
 Images are built with [Packer](https://www.packer.io). Override variables as necessary.
 
@@ -49,3 +61,7 @@ The provisioned image implements all the [OpenShift libvirt HOWTO](https://githu
 ```shell
 $ packer build openshift4-libvirt.json
 ```
+
+## Advanced usage
+
+It's possible to ignore all the defaults and helpers and simply use the image as a stable base for libvirt installer development.
