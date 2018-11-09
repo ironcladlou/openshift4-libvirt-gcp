@@ -5,11 +5,14 @@ set -o pipefail
 
 echo "Building installer"
 
+REPO_OWNER="${1:-openshift}"
+BRANCH="${2:-master}"
 GOPATH=$(mktemp -d)
 export GOPATH
 
-git clone https://github.com/openshift/installer.git $GOPATH/src/github.com/openshift/installer
+git clone https://github.com/"${REPO_OWNER}"/installer.git $GOPATH/src/github.com/openshift/installer
 cd $GOPATH/src/github.com/openshift/installer
+git checkout "${BRANCH}"
 
 hack/get-terraform.sh
 TAGS=libvirt_destroy hack/build.sh
