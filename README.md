@@ -33,7 +33,7 @@ Tools can be updated right from the instance itself.
 Update the OpenShift installer from `https://github.com/openshift/installer.git` `master` using:
 
 ```shell
-$ update-installer [repo-owner] [branch]
+$ update-installer
 ```
 
 Update the OpenShift installer from `https://github.com/repo-owner/installer.git` `branch` using:

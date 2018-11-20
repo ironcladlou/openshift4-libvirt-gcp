@@ -115,6 +115,9 @@ sudo mv $HOME/oc /usr/local/bin
 echo "Installing kubectl binary"
 sudo ln -s /usr/local/bin/oc /usr/local/bin/kubectl
 
+echo "Installing kubectl binary"
+sudo ln -s /usr/local/bin/oc /usr/local/bin/kubectl
+
 # Install a default installer
 update-installer
 
