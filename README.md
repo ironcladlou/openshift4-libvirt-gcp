@@ -30,10 +30,10 @@ Interact with your cluster with `oc`.
 
 Tools can be updated right from the instance itself.
 
-Update the OpenShift installer from `master` using:
+Update the OpenShift installer from `https://github.com/openshift/installer.git` `master` using:
 
 ```shell
-$ update-installer [repo-owner] [branch]
+$ update-installer
 ```
 
 Update the OpenShift installer from `https://github.com/repo-owner/installer.git` `branch` using:
@@ -60,12 +60,23 @@ The source image is `centos-7` with [nested virtualization enabled](https://clou
 $ packer build openshift4-libvirt-source.json
 ```
 
+To override any default variable value, for example, Google Project ID:
+
+```shell
+$ packer build -var 'project=your-google-project-id' openshift4-libvirt-source.json
+```
+
 ### Provisioned image
 
 The provisioned image implements all the [OpenShift libvirt HOWTO](https://github.com/openshift/installer/blob/master/docs/dev/libvirt-howto.md) requirements.
 
 ```shell
 $ packer build openshift4-libvirt.json
+```
+To override any default variable value, for example, Google Project ID:
+
+```shell
+$ packer build -var 'project=your-google-project-id' openshift4-libvirt.json
 ```
 
 ## Advanced usage
