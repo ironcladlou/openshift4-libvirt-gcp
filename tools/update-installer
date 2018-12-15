@@ -14,7 +14,11 @@ git clone https://github.com/"${REPO_OWNER}"/installer.git $GOPATH/src/github.co
 cd $GOPATH/src/github.com/openshift/installer
 git checkout "${BRANCH}"
 
+<<<<<<< HEAD
 TAGS=libvirt hack/build.sh
+=======
+TAGS=libvirt_destroy hack/build.sh
+>>>>>>> 8ac8589... update provision.sh to generate install-config without env vars
 
 sudo mv bin/openshift-install /usr/local/bin
 
