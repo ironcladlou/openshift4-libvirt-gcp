@@ -14,10 +14,8 @@ git clone https://github.com/"${REPO_OWNER}"/installer.git $GOPATH/src/github.co
 cd $GOPATH/src/github.com/openshift/installer
 git checkout "${BRANCH}"
 
-hack/get-terraform.sh
 TAGS=libvirt_destroy hack/build.sh
 
-sudo mv bin/terraform /usr/local/bin
 sudo mv bin/openshift-install /usr/local/bin
 
 rm -rf $GOPATH

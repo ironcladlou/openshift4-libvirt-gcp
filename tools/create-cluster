@@ -2,28 +2,56 @@
 
 NAME="$1"
 if [ -z "$NAME" ]; then
-  echo "usage: create-cluster.sh <name>"
+  echo "usage: create-cluster <name>"
   exit 1
 fi
 
-CLUSTER_DIR="$HOME/clusters/${NAME}"
-if [ -d "$CLUSTER_DIR" ]; then
+CLUSTER_DIR="${HOME}/clusters/${NAME}"
+if [ -d "${CLUSTER_DIR}" ]; then
   echo "WARNING: cluster ${NAME} already exists at ${CLUSTER_DIR}"
+else
+  mkdir -p ${CLUSTER_DIR}
 fi
-
 # Generate a default SSH key if one doesn't exist
-SSH_KEY="$HOME/.ssh/id_rsa"
+SSH_KEY="${HOME}/.ssh/id_rsa"
 if [ ! -f $SSH_KEY ]; then
   ssh-keygen -t rsa -N "" -f $SSH_KEY
 fi
+export BASE_DOMAIN=openshift.testing
+export CLUSTER_NAME="${NAME}"
+export CLUSTER_ID=$(uuidgen --random)
+export PUB_SSH_KEY="${SSH_KEY}.pub"
 
-export OPENSHIFT_INSTALL_BASE_DOMAIN=openshift.testing
-export OPENSHIFT_INSTALL_CLUSTER_NAME=$NAME
-export OPENSHIFT_INSTALL_EMAIL_ADDRESS=user@example.com
-export OPENSHIFT_INSTALL_PASSWORD=user@example.com
-export OPENSHIFT_INSTALL_PLATFORM=libvirt
-export OPENSHIFT_INSTALL_SSH_PUB_KEY_PATH="${SSH_KEY}.pub"
-export OPENSHIFT_INSTALL_PULL_SECRET=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/openshift-pull-secret -H "Metadata-Flavor: Google")
-export OPENSHIFT_INSTALL_LIBVIRT_URI="qemu+tcp://192.168.122.1/system"
-export OPENSHIFT_INSTALL_LIBVIRT_IMAGE="file:///var/lib/redhat-coreos-maipo-latest-qemu.qcow2"
+cat > "${CLUSTER_DIR}/install-config.yml" << EOF
+baseDomain: "${BASE_DOMAIN}"
+clusterID:  "${CLUSTER_ID}"
+machines:
+- name: master
+  platform: {}
+  replicas: 1
+- name: worker
+  platform: {}
+  replicas: 1
+metadata:
+  name: "${CLUSTER_NAME}"
+networking:
+  clusterNetworks:
+  - cidr: 10.128.0.0/14
+    hostSubnetLength: 9
+  serviceCIDR: 172.30.0.0/16
+  type: OpenshiftSDN
+platform:
+  libvirt:
+    URI: qemu+tcp://192.168.122.1/system
+    defaultMachinePlatform:
+      image: https://releases-rhcos.svc.ci.openshift.org/storage/releases/maipo/47.212/redhat-coreos-maipo-47.212-qemu.qcow2.gz
+    masterIPs: null
+    network:
+      if: tt0
+      ipRange: 192.168.126.0/24
+pullSecret: '$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/openshift-pull-secret -H "Metadata-Flavor: Google")'
+sshKey: |
+  $(cat "${PUB_SSH_KEY}")
+EOF
+
 openshift-install create cluster --log-level=debug --dir="$CLUSTER_DIR" 2>&1 | tee /tmp/installer.log
