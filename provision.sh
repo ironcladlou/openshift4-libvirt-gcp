@@ -33,13 +33,6 @@ curl -s https://mirror.go-repo.io/centos/go-repo.repo | sudo tee /etc/yum.repos.
 # TODO: find the GPG key for SIG-Virt stuff
 sudo yum install -y --nogpg libvirt libvirt-devel libvirt-client git golang libvirt-daemon-kvm qemu-kvm bind-utils jq
 
-# Install yq to manipulate manifest file created by installer.
-if [[ ! -e /usr/local/bin/yq ]]; then
-    curl -L https://github.com/mikefarah/yq/releases/download/2.2.1/yq_linux_amd64 -o yq
-    chmod +x yq
-    sudo mv yq /usr/local/bin/yq
-fi
-
 # Enable IP forwarding
 # https://github.com/openshift/installer/blob/master/docs/dev/libvirt-howto.md#enable-ip-forwarding
 sudo sysctl net.ipv4.ip_forward=1
@@ -76,17 +69,15 @@ sudo modprobe -r kvm_intel
 sudo modprobe kvm_intel nested=1
 sudo systemctl restart libvirtd
 # Set up iptables and firewalld
-sudo firewall-cmd --add-rich-rule='rule family=ipv4 source address=192.168.126.0/24 destination address=192.168.122.1 port port=16509 protocol=tcp accept' --permanent --zone=dmz
-sudo firewall-cmd --zone=dmz --change-interface=virbr0 --permanent
-sudo firewall-cmd --zone=dmz --change-interface=tt0 --permanent
-sudo firewall-cmd --zone=dmz --add-service=libvirt --permanent
+# TODO: discover the ports
+sudo iptables -I INPUT -p tcp -s 192.168.122.0/24 -d 192.168.122.1 --dport 16509 -j ACCEPT -m comment --comment "Allow insecure libvirt clients"
+sudo firewall-cmd --zone=trusted --add-source=192.168.126.0/24
+sudo firewall-cmd --zone=trusted --add-port=16509/tcp
 
 # Enable NetworkManager DNS overlay
 # https://github.com/openshift/installer/blob/master/docs/dev/libvirt-howto.md#set-up-networkmanager-dns-overlay
-echo -e "[main]\ndns=dnsmasq" | sudo tee /etc/NetworkManager/conf.d/openshift.conf
+sudo sed -i -z 's/\[main\]\n/\[main\]\ndns=dnsmasq\n/' /etc/NetworkManager/NetworkManager.conf
 echo server=/openshift.testing/192.168.126.1 | sudo tee /etc/NetworkManager/dnsmasq.d/openshift.conf
-# Create new domain for ingress to make sure it able to resolve auth route URL
-echo address=/.apps.openshift.testing/192.168.126.51 | sudo tee -a /etc/NetworkManager/dnsmasq.d/openshift.conf
 sudo systemctl restart NetworkManager
 
 # Configure the default libvirt storage pool
@@ -107,13 +98,9 @@ update-rhcos-image
 
 echo "Installing oc client"
 cd $HOME
-curl -OL https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.1.4/openshift-client-linux-4.1.4.tar.gz
-tar -zxf openshift-client-linux-4.1.4.tar.gz
-rm -fr openshift-client-linux-4.1.4.tar.gz
-sudo mv $HOME/oc /usr/local/bin
-
-echo "Installing kubectl binary"
-sudo ln -s /usr/local/bin/oc /usr/local/bin/kubectl
+curl -OL https://github.com/openshift/origin/releases/download/v3.11.0/openshift-origin-client-tools-v3.11.0-0cbc58b-linux-64bit.tar.gz
+tar -zxf openshift-origin-client-tools-v3.11.0-0cbc58b-linux-64bit.tar.gz
+sudo mv $HOME/openshift-origin-client-tools-v3.11.0-0cbc58b-linux-64bit/oc /usr/local/bin
 
 echo "Installing kubectl binary"
 sudo ln -s /usr/local/bin/oc /usr/local/bin/kubectl
