@@ -21,6 +21,7 @@ export BASE_DOMAIN=openshift.testing
 export CLUSTER_NAME="${NAME}"
 export CLUSTER_ID=$(uuidgen --random)
 export PUB_SSH_KEY="${SSH_KEY}.pub"
+export BUILD=$(curl -s https://releases-rhcos.svc.ci.openshift.org/storage/releases/maipo/builds.json | jq -r '.builds[0]')
 
 cat > "${CLUSTER_DIR}/install-config.yml" << EOF
 baseDomain: "${BASE_DOMAIN}"
@@ -44,7 +45,7 @@ platform:
   libvirt:
     URI: qemu+tcp://192.168.122.1/system
     defaultMachinePlatform:
-      image: https://releases-rhcos.svc.ci.openshift.org/storage/releases/maipo/47.212/redhat-coreos-maipo-47.212-qemu.qcow2.gz
+      image: "https://releases-rhcos.svc.ci.openshift.org/storage/releases/maipo/${BUILD}/redhat-coreos-maipo-${BUILD}-qemu.qcow2.gz"
     masterIPs: null
     network:
       if: tt0

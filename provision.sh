@@ -77,7 +77,7 @@ sudo firewall-cmd --zone=trusted --add-port=16509/tcp
 # Enable NetworkManager DNS overlay
 # https://github.com/openshift/installer/blob/master/docs/dev/libvirt-howto.md#set-up-networkmanager-dns-overlay
 sudo sed -i -z 's/\[main\]\n/\[main\]\ndns=dnsmasq\n/' /etc/NetworkManager/NetworkManager.conf
-echo server=/testing/192.168.126.1 | sudo tee /etc/NetworkManager/dnsmasq.d/tectonic.conf
+echo server=/openshift.testing/192.168.126.1 | sudo tee /etc/NetworkManager/dnsmasq.d/openshift.conf
 sudo systemctl restart NetworkManager
 
 # Configure the default libvirt storage pool
@@ -92,9 +92,6 @@ sudo virsh pool-define /dev/stdin <<EOF
 EOF
 sudo virsh pool-start default
 sudo virsh pool-autostart default
-
-echo "Installing terraform-provider-libvirt"
-sudo bash -c 'GOBIN=/usr/local/bin go get -u github.com/dmacvicar/terraform-provider-libvirt'
 
 # Install a default RHCOS image
 update-rhcos-image
