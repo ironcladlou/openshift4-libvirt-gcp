@@ -14,6 +14,7 @@
       "image_family": "{{ user `image_family` }}",
       "ssh_username": "packer",
       "min_cpu_platform": "Intel Haswell",
+      "machine_type": "n1-standard-2",
       "disk_type": "pd-ssd",
       "disk_size": 256
     }
