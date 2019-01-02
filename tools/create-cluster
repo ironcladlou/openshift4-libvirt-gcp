@@ -23,7 +23,7 @@ export CLUSTER_ID=$(uuidgen --random)
 export PUB_SSH_KEY="${SSH_KEY}.pub"
 export BUILD=$(curl -s https://releases-rhcos.svc.ci.openshift.org/storage/releases/maipo/builds.json | jq -r '.builds[0]')
 
-cat > "${CLUSTER_DIR}/install-config.yml" << EOF
+cat > "${CLUSTER_DIR}/install-config.yaml" << EOF
 baseDomain: "${BASE_DOMAIN}"
 clusterID:  "${CLUSTER_ID}"
 machines:

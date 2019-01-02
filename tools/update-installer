@@ -14,7 +14,7 @@ git clone https://github.com/"${REPO_OWNER}"/installer.git $GOPATH/src/github.co
 cd $GOPATH/src/github.com/openshift/installer
 git checkout "${BRANCH}"
 
-TAGS=libvirt_destroy hack/build.sh
+TAGS=libvirt hack/build.sh
 
 sudo mv bin/openshift-install /usr/local/bin
 
