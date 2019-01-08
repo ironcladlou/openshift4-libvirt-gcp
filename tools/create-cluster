@@ -39,6 +39,7 @@ networking:
   clusterNetworks:
   - cidr: 10.128.0.0/14
     hostSubnetLength: 9
+  machineCIDR: 192.168.126.0/24
   serviceCIDR: 172.30.0.0/16
   type: OpenshiftSDN
 platform:
