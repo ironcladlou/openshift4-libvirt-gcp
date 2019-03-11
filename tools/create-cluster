@@ -34,15 +34,24 @@ controlPlane:
 metadata:
   name: "${CLUSTER_NAME}"
 networking:
+  clusterNetworks:
+  - cidr: 10.128.0.0/14
+    hostSubnetLength: 9
   machineCIDR: 192.168.126.0/24
+  serviceCIDR: 172.30.0.0/16
+  type: OpenShiftSDN
 platform:
   libvirt:
-    defaultMachinePlatform:
-      image: "https://releases-rhcos.svc.ci.openshift.org/storage/releases/maipo/${BUILD}/redhat-coreos-maipo-${BUILD}-qemu.qcow2.gz"
-
+    network:
+      if: tt0
 pullSecret: '$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/openshift-pull-secret -H "Metadata-Flavor: Google")'
 sshKey: |
   $(cat "${PUB_SSH_KEY}")
 EOF
 
+# Create manifests and modify route domain
+openshift-install --dir="$CLUSTER_DIR" create manifests
+yq w -i $CLUSTER_DIR/manifests/cluster-ingress-02-config.yml spec[domain] apps.$BASE_DOMAIN
+
+export TF_VAR_libvirt_master_memory=11024
 openshift-install create cluster --log-level=debug --dir="$CLUSTER_DIR" 2>&1 | tee /tmp/installer.log
