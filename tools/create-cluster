@@ -51,6 +51,7 @@ EOF
 
 # Create manifests and modify route domain
 openshift-install --dir="$CLUSTER_DIR" create manifests
+# Workaround for https://github.com/openshift/installer/issues/1007
 yq w -i $CLUSTER_DIR/manifests/cluster-ingress-02-config.yml spec[domain] apps.$BASE_DOMAIN
 
 export TF_VAR_libvirt_master_memory=11024
