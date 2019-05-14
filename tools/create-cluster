@@ -20,26 +20,31 @@ fi
 export BASE_DOMAIN=openshift.testing
 export CLUSTER_NAME="${NAME}"
 export PUB_SSH_KEY="${SSH_KEY}.pub"
-export BUILD=$(curl -s https://releases-rhcos.svc.ci.openshift.org/storage/releases/maipo/builds.json | jq -r '.builds[0]')
 
 cat > "${CLUSTER_DIR}/install-config.yaml" << EOF
-apiVersion: v1beta3
+apiVersion: v1
 baseDomain: "${BASE_DOMAIN}"
 compute:
-- name: worker
+- hyperthreading: Enabled
+  name: worker
+  platform: {}
   replicas: 1
 controlPlane:
+  hyperthreading: Enabled
   name: master
+  platform: {}
   replicas: 1
 metadata:
+  creationTimestamp: null
   name: "${CLUSTER_NAME}"
 networking:
-  clusterNetworks:
+  clusterNetwork:
   - cidr: 10.128.0.0/14
-    hostSubnetLength: 9
+    hostPrefix: 23
   machineCIDR: 192.168.126.0/24
-  serviceCIDR: 172.30.0.0/16
-  type: OpenShiftSDN
+  networkType: OpenShiftSDN
+  serviceNetwork:
+  - 172.30.0.0/16
 platform:
   libvirt:
     network:
