@@ -1,7 +1,7 @@
 {
   "variables": {
     "image_family": "openshift4-libvirt-source",
-    "source_image_family": "centos-7",
+    "source_image_family": "rhel-8",
     "project": "openshift-gce-devel",
     "zone": "us-east1-c"
   },
@@ -15,5 +15,11 @@
       "image_licenses": ["projects/vm-options/global/licenses/enable-vmx"],
       "ssh_username": "packer"
     }
-  ]
+  ],
+  "provisioners": [{
+    "type": "shell",
+    "inline": [
+      "sudo yum install -y cloud-utils-growpart"
+    ]
+  }]
 }
