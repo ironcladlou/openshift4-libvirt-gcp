@@ -60,4 +60,4 @@ openshift-install --dir="$CLUSTER_DIR" create manifests
 yq w -i $CLUSTER_DIR/manifests/cluster-ingress-02-config.yml spec[domain] apps.$BASE_DOMAIN
 
 export TF_VAR_libvirt_master_memory=11024
-openshift-install create cluster --log-level=debug --dir="$CLUSTER_DIR"
+openshift-install create cluster --log-level=debug --dir="$CLUSTER_DIR" || openshift-install wait-for install-complete --log-level=debug --dir="$CLUSTER_DIR"
