@@ -76,10 +76,10 @@ sudo modprobe -r kvm_intel
 sudo modprobe kvm_intel nested=1
 sudo systemctl restart libvirtd
 # Set up iptables and firewalld
-# TODO: discover the ports
-sudo iptables -I INPUT -p tcp -s 192.168.122.0/24 -d 192.168.122.1 --dport 16509 -j ACCEPT -m comment --comment "Allow insecure libvirt clients"
-sudo firewall-cmd --zone=trusted --add-source=192.168.126.0/24
-sudo firewall-cmd --zone=trusted --add-port=16509/tcp
+sudo firewall-cmd --add-rich-rule='rule family=ipv4 source address=192.168.126.0/24 destination address=192.168.122.1 port port=16509 protocol=tcp accept' --permanent --zone=dmz
+sudo firewall-cmd --zone=dmz --change-interface=virbr0 --permanent
+sudo firewall-cmd --zone=dmz --change-interface=tt0 --permanent
+sudo firewall-cmd --zone=dmz --add-service=libvirt --permanent
 
 # Enable NetworkManager DNS overlay
 # https://github.com/openshift/installer/blob/master/docs/dev/libvirt-howto.md#set-up-networkmanager-dns-overlay
@@ -107,9 +107,9 @@ update-rhcos-image
 
 echo "Installing oc client"
 cd $HOME
-curl -OL https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/openshift-client-linux-4.1.2.tar.gz
-tar -zxf openshift-client-linux-4.1.2.tar.gz
-rm -fr openshift-client-linux-4.1.2.tar.gz
+curl -OL https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.1.4/openshift-client-linux-4.1.4.tar.gz
+tar -zxf openshift-client-linux-4.1.4.tar.gz
+rm -fr openshift-client-linux-4.1.4.tar.gz
 sudo mv $HOME/oc /usr/local/bin
 
 echo "Installing kubectl binary"
