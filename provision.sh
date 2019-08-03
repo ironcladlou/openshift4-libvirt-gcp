@@ -4,11 +4,16 @@ set -u
 set -o pipefail
 
 # Install tools
+<<<<<<< Updated upstream
 sudo mv /tmp/tools/* /usr/local/bin
 
 # Grow the filesystem
 sudo growpart /dev/sda 1
 sudo xfs_growfs /
+=======
+chmod +x tools/*
+sudo cp tools/* /usr/local/bin
+>>>>>>> Stashed changes
 
 sudo yum install -y libvirt libvirt-devel libvirt-client git golang libvirt-daemon-kvm qemu-kvm bind-utils jq
 
@@ -46,17 +51,13 @@ EOF
 sudo bash -c 'cat >> /etc/sysconfig/libvirtd' << EOF
 LIBVIRTD_ARGS="--listen"
 EOF
-sudo bash -c 'cat >> /etc/modprobe.d/kvm.conf' << EOF
-options kvm_intel nested=1
-EOF
-# Ensure nesting is enabled in the kernel
-# TODO: verify this is still necessary
-sudo modprobe -r kvm_intel
-sudo modprobe kvm_intel nested=1
 sudo systemctl restart libvirtd
+
 # Set up iptables and firewalld
 # TODO: discover the ports
-sudo firewall-cmd --add-rich-rule='rule family=ipv4 source address=192.168.126.0/24 destination address=192.168.122.1 port port=16509 protocol=tcp accept' --permanent --zone=libvirt
+sudo firewall-cmd --add-rich-rule='rule family=ipv4 source address=192.168.126.0/24 destination address=192.168.122.1 port port=16509 protocol=tcp accept' --zone=libvirt
+sudo firewall-cmd --add-rich-rule='rule family=ipv4 source address=192.168.126.0/24 destination address=192.168.122.1 port port=16509 protocol=tcp accept' --zone=libvirt --permanent
+sudo firewall-cmd --zone=libvirt --add-service=libvirt
 sudo firewall-cmd --zone=libvirt --add-service=libvirt --permanent
 
 # Enable NetworkManager DNS overlay
@@ -82,14 +83,10 @@ sudo virsh pool-autostart default
 
 echo "Installing oc client"
 cd $HOME
-curl -OL https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.1.8/openshift-client-linux-4.1.8.tar.gz
+curl -OL http://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.1.8/openshift-install-linux-4.1.8.tar.gz
 tar -zxf openshift-client-linux-4.1.8.tar.gz
 rm -fr openshift-client-linux-4.1.8.tar.gz
 sudo mv $HOME/oc $HOME/kubectl /usr/local/bin
 
 # Install a default installer
 update-installer
-
-sudo bash -c 'cat >> /etc/bashrc' << EOF
-export KUBECONFIG=\$HOME/clusters/nested/auth/kubeconfig
-EOF
