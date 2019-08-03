@@ -10,10 +10,6 @@ sudo mv /tmp/tools/* /usr/local/bin
 sudo growpart /dev/sda 1
 sudo xfs_growfs /
 
-# :-)
-sudo setenforce 0
-sudo sed -i -z 's/SELINUX=enforcing/SELINUX=disabled/' /etc/selinux/config
-
 sudo yum install -y libvirt libvirt-devel libvirt-client git golang libvirt-daemon-kvm qemu-kvm bind-utils jq
 
 # Install yq to manipulate manifest file created by installer.
@@ -60,7 +56,7 @@ sudo modprobe kvm_intel nested=1
 sudo systemctl restart libvirtd
 # Set up iptables and firewalld
 # TODO: discover the ports
-sudo iptables -I INPUT -p tcp -s 192.168.122.0/24 -d 192.168.122.1 --dport 16509 -j ACCEPT -m comment --comment "Allow insecure libvirt clients"
+sudo firewall-cmd --add-rich-rule='rule family=ipv4 source address=192.168.126.0/24 destination address=192.168.122.1 port port=16509 protocol=tcp accept' --permanent --zone=libvirt
 sudo firewall-cmd --zone=libvirt --add-service=libvirt --permanent
 
 # Enable NetworkManager DNS overlay
@@ -84,18 +80,12 @@ EOF
 sudo virsh pool-start default
 sudo virsh pool-autostart default
 
-# Install a default RHCOS image
-update-rhcos-image
-
 echo "Installing oc client"
 cd $HOME
-curl -OL https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.1.0/openshift-client-linux-4.1.0.tar.gz
-tar -zxf openshift-client-linux-4.1.0.tar.gz
-rm -fr openshift-client-linux-4.1.0.tar.gz
-sudo mv $HOME/oc /usr/local/bin
-
-echo "Installing kubectl binary"
-sudo ln -s /usr/local/bin/oc /usr/local/bin/kubectl
+curl -OL https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.1.8/openshift-client-linux-4.1.8.tar.gz
+tar -zxf openshift-client-linux-4.1.8.tar.gz
+rm -fr openshift-client-linux-4.1.8.tar.gz
+sudo mv $HOME/oc $HOME/kubectl /usr/local/bin
 
 # Install a default installer
 update-installer
