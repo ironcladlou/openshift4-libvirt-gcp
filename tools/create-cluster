@@ -60,8 +60,4 @@ openshift-install --dir="$CLUSTER_DIR" create manifests
 yq w -i $CLUSTER_DIR/manifests/cluster-ingress-02-config.yml spec[domain] apps.$BASE_DOMAIN
 
 export TF_VAR_libvirt_master_memory=11024
-openshift-install create cluster --log-level=debug --dir="$CLUSTER_DIR" || true
-
-# Approve the csr forcefully till https://github.com/openshift/installer/issues/1893
-oc --config "$CLUSTER_DIR/auth/kubeconfig" get csr -ojson | jq -r '.items[] | select(.status == {} ) | .metadata.name' | xargs oc --config "$CLUSTER_DIR/auth/kubeconfig" adm certificate approve
-openshift-install wait-for install-complete --log-level=debug --dir="$CLUSTER_DIR"
+openshift-install create cluster --log-level=debug --dir="$CLUSTER_DIR" || openshift-install wait-for install-complete --log-level=debug --dir="$CLUSTER_DIR"
