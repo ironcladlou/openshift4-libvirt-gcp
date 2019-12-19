@@ -107,13 +107,13 @@ update-rhcos-image
 
 echo "Installing oc client"
 cd $HOME
-curl -OL https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.1.4/openshift-client-linux-4.1.4.tar.gz
-tar -zxf openshift-client-linux-4.1.4.tar.gz
-rm -fr openshift-client-linux-4.1.4.tar.gz
+curl -OL https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.3.0/openshift-client-linux-4.3.0.tar.gz
+tar -zxf openshift-client-linux-4.3.0.tar.gz
+rm -fr openshift-client-linux-4.3.0.tar.gz
 sudo mv $HOME/oc /usr/local/bin
 
 echo "Installing kubectl binary"
-sudo ln -s /usr/local/bin/oc /usr/local/bin/kubectl
+sudo mv $HOME/kubectl /usr/local/bin
 
 # Install a default installer
 update-installer
