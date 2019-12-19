@@ -1,7 +1,7 @@
 {
   "variables": {
     "image_family": "openshift4-libvirt-source",
-    "source_image_family": "centos-7",
+    "source_image_family": "centos-8",
     "project": "openshift-gce-devel",
     "zone": "us-east1-c"
   },
