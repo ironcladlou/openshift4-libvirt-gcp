@@ -102,9 +102,6 @@ EOF
 sudo virsh pool-start default
 sudo virsh pool-autostart default
 
-# Install a default RHCOS image
-update-rhcos-image
-
 echo "Installing oc client"
 cd $HOME
 curl -OL https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.3.0/openshift-client-linux-4.3.0.tar.gz
