@@ -58,6 +58,10 @@ EOF
 openshift-install --dir="$CLUSTER_DIR" create manifests
 # Workaround for https://github.com/openshift/installer/issues/1007
 yq w -i $CLUSTER_DIR/manifests/cluster-ingress-02-config.yml spec[domain] apps.$BASE_DOMAIN
+yq w -i $CLUSTER_DIR/openshift/99_openshift-cluster-api_master-machines-0.yaml spec.providerSpec.value[domainMemory] 10192
+yq w -i $CLUSTER_DIR/openshift/99_openshift-cluster-api_master-machines-0.yaml spec.providerSpec.value[domainVcpu] 4
+yq w -i $CLUSTER_DIR/openshift/99_openshift-cluster-api_worker-machineset-0.yaml spec.template.spec.providerSpec.value[domainMemory] 10192
+yq w -i $CLUSTER_DIR/openshift/99_openshift-cluster-api_worker-machineset-0.yaml spec.template.spec.providerSpec.value[domainVcpu] 6
 
-export TF_VAR_libvirt_master_memory=11024
+
 openshift-install create cluster --log-level=debug --dir="$CLUSTER_DIR" || openshift-install wait-for install-complete --log-level=debug --dir="$CLUSTER_DIR"
