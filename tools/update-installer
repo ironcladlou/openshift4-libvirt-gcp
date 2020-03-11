@@ -18,4 +18,4 @@ TAGS=libvirt hack/build.sh
 
 sudo mv bin/openshift-install /usr/local/bin
 
-rm -rf $GOPATH
+sudo rm -rf $GOPATH

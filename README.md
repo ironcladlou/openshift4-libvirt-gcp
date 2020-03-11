@@ -13,7 +13,7 @@ $ gcloud compute instances create $INSTANCE \
   --image-family openshift4-libvirt \
   --zone us-east1-c \
   --min-cpu-platform "Intel Haswell" \
-  --machine-type n1-standard-8 \
+  --machine-type n1-standard-16 \
   --boot-disk-type pd-ssd --boot-disk-size 256GB \
   --metadata-from-file openshift-pull-secret=openshift-pull-secret.json
 ```
@@ -42,19 +42,13 @@ Update the OpenShift installer from `https://github.com/repo-owner/installer.git
 $ update-installer repo-owner branch
 ```
 
-Update the RHCOS image using:
-
-```shell
-$ update-rhcos-image
-```
-
 ## Images
 
 Images are built with [Packer](https://www.packer.io). Override variables as necessary.
 
 ### Source image
 
-The source image is `centos-7` with [nested virtualization enabled](https://cloud.google.com/compute/docs/instances/enable-nested-virtualization-vm-instances#restrictions).
+The source image is `rhel8` with [nested virtualization enabled](https://cloud.google.com/compute/docs/instances/enable-nested-virtualization-vm-instances#restrictions).
 
 ```shell
 $ packer build openshift4-libvirt-source.json
