@@ -2,15 +2,18 @@
 set -e
 set -u
 set -o pipefail
+set -x
 
 # Install tools
 sudo mv /tmp/tools/* /usr/local/bin
 
-# Grow the filesystem
-sudo growpart /dev/sda 1
-sudo xfs_growfs /
+sudo yum install -y libvirt libvirt-devel libvirt-client git libvirt-daemon-kvm qemu-kvm bind-utils jq gcc-c++
 
-sudo yum install -y libvirt libvirt-devel libvirt-client git golang libvirt-daemon-kvm qemu-kvm bind-utils jq
+# Install golang
+curl -L https://dl.google.com/go/go1.13.8.linux-amd64.tar.gz -o go1.13.8.linux-amd64.tar.gz
+tar -xvf go1.13.8.linux-amd64.tar.gz
+sudo mv go /usr/local
+export PATH=$PATH:/usr/local/go/bin
 
 # Install yq to manipulate manifest file created by installer.
 if [[ ! -e /usr/local/bin/yq ]]; then
@@ -82,14 +85,15 @@ sudo virsh pool-autostart default
 
 echo "Installing oc client"
 cd $HOME
-curl -OL https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.1.8/openshift-client-linux-4.1.8.tar.gz
-tar -zxf openshift-client-linux-4.1.8.tar.gz
-rm -fr openshift-client-linux-4.1.8.tar.gz
-sudo mv $HOME/oc $HOME/kubectl /usr/local/bin
+curl -OL https://mirror.openshift.com/pub/openshift-v4/clients/oc/latest/linux/oc.tar.gz
+tar -zxf oc.tar.gz
+rm -fr oc.tar.gz
+sudo mv $HOME/oc /usr/local/bin
 
 # Install a default installer
 update-installer
 
 sudo bash -c 'cat >> /etc/bashrc' << EOF
 export KUBECONFIG=\$HOME/clusters/nested/auth/kubeconfig
+export PATH=$PATH:/usr/local/go/bin
 EOF
