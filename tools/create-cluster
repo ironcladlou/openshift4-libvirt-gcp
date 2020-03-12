@@ -26,14 +26,16 @@ apiVersion: v1
 baseDomain: "${BASE_DOMAIN}"
 compute:
 - hyperthreading: Enabled
+  architecture: amd64
   name: worker
   platform: {}
-  replicas: 1
+  replicas: 0
 controlPlane:
   hyperthreading: Enabled
+  architecture: amd64
   name: master
   platform: {}
-  replicas: 1
+  replicas: 3
 metadata:
   creationTimestamp: null
   name: "${CLUSTER_NAME}"
@@ -41,7 +43,8 @@ networking:
   clusterNetwork:
   - cidr: 10.128.0.0/14
     hostPrefix: 23
-  machineCIDR: 192.168.126.0/24
+  machineNetwork:
+  - cidr: 192.168.126.0/24
   networkType: OpenShiftSDN
   serviceNetwork:
   - 172.30.0.0/16
@@ -49,6 +52,7 @@ platform:
   libvirt:
     network:
       if: tt0
+publish: External
 pullSecret: '$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/openshift-pull-secret -H "Metadata-Flavor: Google")'
 sshKey: |
   $(cat "${PUB_SSH_KEY}")
