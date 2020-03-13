@@ -29,7 +29,7 @@ compute:
   architecture: amd64
   name: worker
   platform: {}
-  replicas: 0
+  replicas: 1
 controlPlane:
   hyperthreading: Enabled
   architecture: amd64
