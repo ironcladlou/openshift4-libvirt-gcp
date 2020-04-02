@@ -12,6 +12,10 @@ if [ -d "${CLUSTER_DIR}" ]; then
 else
   mkdir -p ${CLUSTER_DIR}
 fi
+if [[ -z "$OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE" ]]; then
+    echo "\$OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE must be provided"
+    exit 1
+fi
 # Generate a default SSH key if one doesn't exist
 SSH_KEY="${HOME}/.ssh/id_rsa"
 if [ ! -f $SSH_KEY ]; then
@@ -62,7 +66,12 @@ EOF
 # Create manifests and modify route domain
 openshift-install --dir="$CLUSTER_DIR" create manifests
 # Workaround for https://github.com/openshift/installer/issues/1007
-yq w -i $CLUSTER_DIR/manifests/cluster-ingress-02-config.yml spec[domain] apps.$BASE_DOMAIN
+# Add custom domain to cluster-ingress
+yq write --inplace $CLUSTER_DIR/manifests/cluster-ingress-02-config.yml spec[domain] apps.$BASE_DOMAIN
 
-export TF_VAR_libvirt_master_memory=11024
-openshift-install create cluster --log-level=debug --dir="$CLUSTER_DIR"
+# Add master memory to 12 GB
+# This is only valid for openshift 4.3 onwards
+yq write --inplace ${CLUSTER_DIR}/openshift/99_openshift-cluster-api_master-machines-0.yaml spec.providerSpec.value[domainMemory] 14336
+
+openshift-install create cluster --log-level=debug --dir="$CLUSTER_DIR" || true
+openshift-install wait-for install-complete --log-level=debug --dir="$CLUSTER_DIR"

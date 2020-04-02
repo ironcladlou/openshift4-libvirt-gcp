@@ -1,14 +1,19 @@
 #!/bin/bash
-set -e
-set -u
-set -o pipefail
 
-echo "Cleaning up GCP"
+bold=$(tput bold)
+bright=$(tput setaf 14)
+reset=$(tput sgr0)
+
+echo_bright() {
+    echo "${bold}${bright}$1${reset}"
+}
+
+echo_bright "Cleaning up GCP"
 if [[ -z "$INSTANCE" ]]; then
      echo "\$INSTANCE must be provided"
 fi
-echo "This script will remove all $INSTANCE GCP resources"
-echo "Do you want to continue (Y/n)?"
+echo "This script will remove all ${bright}${bold}$INSTANCE${reset} GCP resources"
+echo "${bold}Do you want to continue (Y/n)?${reset}"
 read x
 if [ "$x" != "Y" ]; then
     exit 0

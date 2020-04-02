@@ -17,11 +17,11 @@ Note: this script uses scp to copy pull-secret to gcp instance.  Alternative is 
 add pull-secret to metadata when creating the instance.  However, metadata is printed
 in the gcp console.  This is why this setup uses scp instead. 
 ```
-Check out `create-gcp-resources.sh` for individual commands or run the script like so:
+You can either run the commands from `create-gcp-resources.sh` individually or run the script like so:
 
 ```shell
 $ export INSTANCE=mytest
-$ export GCP_USER=<your gcp username>, used to scp pull-secret to $HOME/pull-secret in gcp instance
+$ export GCP_USER=<whatever name you login as to gcp instance>, used to scp pull-secret to $HOME/pull-secret in gcp instance
 $ export PULL_SECRET=/path/to/pull-secret-one-liner.json
 $ ./create-gcp-resources.sh
 ```

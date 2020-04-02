@@ -1,6 +1,14 @@
 #!/bin/bash
 
-echo "Creating GCP resources"
+bold=$(tput bold)
+bright=$(tput setaf 14)
+reset=$(tput sgr0)
+
+echo_bright() {
+    echo "${bold}${bright}$1${reset}"
+}
+
+echo "${bold}Creating GCP resources${reset}"
 if [[ -z "$INSTANCE" ]] || [[ -z "$PULL_SECRET" ]] || [[ -z "$GCP_USER" ]]; then
     echo the following environment variables must be provided:
     echo "\$INSTANCE to name gcp resources"
@@ -8,29 +16,26 @@ if [[ -z "$INSTANCE" ]] || [[ -z "$PULL_SECRET" ]] || [[ -z "$GCP_USER" ]]; then
     echo "\$GCP_USER your gcp username to scp pull-secret to gcp instance"
     exit 1
 fi
-if [[ -z "$PULL_SECRET" ]]; then
-    echo "\$PULL_SECRET path must be provided"
-    exit 1
-fi
-if [[ -z "$GCP_USER" ]]; then
-    echo "\$GCP_USER your gcp username must be provided, to scp pull-secret to gcp instance"
-    exit 1
-fi
 set -euo pipefail
-set -x
+
+export ZONE=$(gcloud config get-value compute/zone)
+export PROJECT=$(gcloud config get-value project)
+echo_bright "Creating network ${INSTANCE}"
 gcloud compute networks create "${INSTANCE}" \
   --subnet-mode=custom \
   --bgp-routing-mode=regional
 
+echo_bright "Creating subnet for network ${INSTANCE}"
 gcloud compute networks subnets create "${INSTANCE}" \
   --network "${INSTANCE}" \
   --range=10.0.0.0/9
 
+echo_bright "Creating firewall rules for network ${INSTANCE}"
 gcloud compute firewall-rules create "${INSTANCE}" \
   --network "${INSTANCE}" \
   --allow tcp:22,icmp
 
-
+echo_bright "Creating instance ${INSTANCE} in project ${PROJECT}"
 gcloud compute instances create "${INSTANCE}" \
   --image-family openshift4-libvirt \
   --zone us-east1-c \
@@ -40,9 +45,16 @@ gcloud compute instances create "${INSTANCE}" \
   --network "${INSTANCE}" \
   --subnet "${INSTANCE}"
 
-ZONE=$(gcloud config get-value compute/zone)
-PROJECT=$(gcloud config get-value project)
-gcloud compute --project "${PROJECT}" scp \
-  --quiet \
-  --zone "${ZONE}" \
-  -- "${PULL_SECRET}" "${GCP_USER}"@"${INSTANCE}":"${HOME}"/pull-secret
+echo_bright "Using scp to copy pull-secret to /home/${GCP_USER}/pull-secret in instance ${INSTANCE}"
+timeout 45s bash -ce 'until \
+    gcloud compute --project "${PROJECT}" scp \
+      --quiet \
+      --zone "${ZONE}" \
+      -- "${PULL_SECRET}" "${GCP_USER}"@"${INSTANCE}":"${HOME}"/pull-secret; do sleep 5; done'
+
+echo "${bold}All resources successfully created${reset}"
+echo "${bold}Use this command to ssh into the VM:${reset}"
+echo_bright "gcloud beta compute ssh --zone ${ZONE} ${INSTANCE} --project ${PROJECT}"
+echo ""
+echo "${bold}To clean up all resources from this script, run:${reset}"
+echo_bright "INSTANCE=${INSTANCE} ./teardown-gcp.sh"
