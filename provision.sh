@@ -89,6 +89,7 @@ curl -OL https://mirror.openshift.com/pub/openshift-v4/clients/oc/latest/linux/o
 tar -zxf oc.tar.gz
 rm -fr oc.tar.gz
 sudo mv $HOME/oc /usr/local/bin
+sudo ln -s /usr/local/bin/oc /usr/local/bin/kubectl
 
 # Install a default installer
 update-installer
