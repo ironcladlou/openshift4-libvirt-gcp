@@ -6,15 +6,19 @@ if [ -z "$NAME" ]; then
   exit 1
 fi
 
+if [[ -z "$OKD_RELEASE_IMAGE" ]]; then
+    export OKD_RELEASE_IMAGE=quay.io/openshift/okd:4.4.0-0.okd-2020-05-23-055148-beta5
+fi
+
+# extract libvirt installer from okd image
+oc adm release extract --command openshift-baremetal-install "${OKD_RELEASE_IMAGE}" 
+sudo mv openshift-baremetal-install /usr/local/bin/openshift-install 
+
 CLUSTER_DIR="${HOME}/clusters/${NAME}"
 if [ -d "${CLUSTER_DIR}" ]; then
   echo "WARNING: cluster ${NAME} already exists at ${CLUSTER_DIR}"
 else
   mkdir -p ${CLUSTER_DIR}
-fi
-if [[ -z "$OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE" ]]; then
-    echo "\$OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE must be provided"
-    exit 1
 fi
 # Generate a default SSH key if one doesn't exist
 SSH_KEY="${HOME}/.ssh/id_rsa"

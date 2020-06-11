@@ -37,11 +37,11 @@ gcloud compute firewall-rules create "${INSTANCE}" \
 
 echo_bright "Creating instance ${INSTANCE} in project ${PROJECT}"
 gcloud compute instances create "${INSTANCE}" \
-  --image-family openshift4-libvirt \
+  --image-family okd4-libvirt \
   --zone us-east1-c \
   --min-cpu-platform "Intel Haswell" \
-  --machine-type n1-standard-16 \
-  --boot-disk-type pd-ssd --boot-disk-size 256GB \
+  --machine-type n1-standard-8 \
+  --boot-disk-type pd-ssd --boot-disk-size 128GB \
   --network "${INSTANCE}" \
   --subnet "${INSTANCE}"
 

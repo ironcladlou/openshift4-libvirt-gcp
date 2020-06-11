@@ -91,7 +91,7 @@ rm -fr oc.tar.gz
 sudo mv $HOME/oc /usr/local/bin
 sudo ln -s /usr/local/bin/oc /usr/local/bin/kubectl
 
-# Install a default installer
+# Extract default installer
 update-installer
 
 sudo bash -c 'cat >> /etc/bashrc' << EOF
