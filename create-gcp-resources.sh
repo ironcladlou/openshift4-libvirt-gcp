@@ -40,7 +40,7 @@ gcloud compute instances create "${INSTANCE}" \
   --image-family okd4-libvirt \
   --zone us-east1-c \
   --min-cpu-platform "Intel Haswell" \
-  --machine-type n1-standard-8 \
+  --machine-type n1-standard-16 \
   --boot-disk-type pd-ssd --boot-disk-size 128GB \
   --network "${INSTANCE}" \
   --subnet "${INSTANCE}"
