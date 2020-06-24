@@ -2,36 +2,18 @@
 set -e
 set -u
 set -o pipefail
+set -x
 
 # Install tools
 sudo mv /tmp/tools/* /usr/local/bin
 
-# :-)
-sudo setenforce 0
-sudo sed -i -z 's/SELINUX=enforcing/SELINUX=disabled/' /etc/selinux/config
+sudo yum install -y libvirt libvirt-devel libvirt-client git libvirt-daemon-kvm qemu-kvm bind-utils jq gcc-c++
 
-# Enable the latest libvirt packages
-sudo bash -c 'cat > /etc/yum.repos.d/sig-virt.repo' << EOF
-[sig-virt-libvirt-latest]
-name=SIG-Virt libvirt packages for CentOS 7 x86_64
-baseurl=http://mirror.centos.org/centos-7/7/virt/x86_64/libvirt-latest
-enabled=1
-EOF
-
-# Enable the latest QEMU packages
-sudo bash -c 'cat > /etc/yum.repos.d/sig-virt-kvm-common.repo' << EOF
-[sig-virt-kvm-common]
-name=SIG-Virt libvirt packages for CentOS 7 x86_64
-baseurl=http://mirror.centos.org/centos-7/7/virt/x86_64/kvm-common
-enabled=1
-EOF
-
-# Enable the latest Go packages
-sudo rpm --import https://mirror.go-repo.io/centos/RPM-GPG-KEY-GO-REPO
-curl -s https://mirror.go-repo.io/centos/go-repo.repo | sudo tee /etc/yum.repos.d/go-repo.repo
-
-# TODO: find the GPG key for SIG-Virt stuff
-sudo yum install -y --nogpg libvirt libvirt-devel libvirt-client git golang libvirt-daemon-kvm qemu-kvm bind-utils jq
+# Install golang
+curl -L https://dl.google.com/go/go1.13.8.linux-amd64.tar.gz -o go1.13.8.linux-amd64.tar.gz
+tar -xvf go1.13.8.linux-amd64.tar.gz
+sudo mv go /usr/local
+export PATH=$PATH:/usr/local/go/bin
 
 # Install yq to manipulate manifest file created by installer.
 if [[ ! -e /usr/local/bin/yq ]]; then
@@ -76,10 +58,9 @@ sudo modprobe -r kvm_intel
 sudo modprobe kvm_intel nested=1
 sudo systemctl restart libvirtd
 # Set up iptables and firewalld
-sudo firewall-cmd --add-rich-rule='rule family=ipv4 source address=192.168.126.0/24 destination address=192.168.122.1 port port=16509 protocol=tcp accept' --permanent --zone=dmz
-sudo firewall-cmd --zone=dmz --change-interface=virbr0 --permanent
-sudo firewall-cmd --zone=dmz --change-interface=tt0 --permanent
-sudo firewall-cmd --zone=dmz --add-service=libvirt --permanent
+# TODO: discover the ports
+sudo firewall-cmd --add-rich-rule='rule family=ipv4 source address=192.168.126.0/24 destination address=192.168.122.1 port port=16509 protocol=tcp accept' --permanent --zone=libvirt
+sudo firewall-cmd --zone=libvirt --add-service=libvirt --permanent
 
 # Enable NetworkManager DNS overlay
 # https://github.com/openshift/installer/blob/master/docs/dev/libvirt-howto.md#set-up-networkmanager-dns-overlay
@@ -102,17 +83,12 @@ EOF
 sudo virsh pool-start default
 sudo virsh pool-autostart default
 
-# Install a default RHCOS image
-update-rhcos-image
-
 echo "Installing oc client"
 cd $HOME
-curl -OL https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.1.4/openshift-client-linux-4.1.4.tar.gz
-tar -zxf openshift-client-linux-4.1.4.tar.gz
-rm -fr openshift-client-linux-4.1.4.tar.gz
+curl -OL https://mirror.openshift.com/pub/openshift-v4/clients/oc/latest/linux/oc.tar.gz
+tar -zxf oc.tar.gz
+rm -fr oc.tar.gz
 sudo mv $HOME/oc /usr/local/bin
-
-echo "Installing kubectl binary"
 sudo ln -s /usr/local/bin/oc /usr/local/bin/kubectl
 
 # Install a default installer
@@ -120,4 +96,5 @@ update-installer
 
 sudo bash -c 'cat >> /etc/bashrc' << EOF
 export KUBECONFIG=\$HOME/clusters/nested/auth/kubeconfig
+export PATH=$PATH:/usr/local/go/bin
 EOF

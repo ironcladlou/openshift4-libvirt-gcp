@@ -12,6 +12,10 @@ if [ -d "${CLUSTER_DIR}" ]; then
 else
   mkdir -p ${CLUSTER_DIR}
 fi
+if [[ -z "$OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE" ]]; then
+    echo "\$OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE must be provided"
+    exit 1
+fi
 # Generate a default SSH key if one doesn't exist
 SSH_KEY="${HOME}/.ssh/id_rsa"
 if [ ! -f $SSH_KEY ]; then
@@ -20,20 +24,23 @@ fi
 export BASE_DOMAIN=openshift.testing
 export CLUSTER_NAME="${NAME}"
 export PUB_SSH_KEY="${SSH_KEY}.pub"
+PULL_SECRET=$(cat "${HOME}/pull-secret")
 
 cat > "${CLUSTER_DIR}/install-config.yaml" << EOF
 apiVersion: v1
 baseDomain: "${BASE_DOMAIN}"
 compute:
 - hyperthreading: Enabled
+  architecture: amd64
   name: worker
   platform: {}
-  replicas: 1
+  replicas: 2
 controlPlane:
   hyperthreading: Enabled
+  architecture: amd64
   name: master
   platform: {}
-  replicas: 1
+  replicas: 3
 metadata:
   creationTimestamp: null
   name: "${CLUSTER_NAME}"
@@ -41,7 +48,8 @@ networking:
   clusterNetwork:
   - cidr: 10.128.0.0/14
     hostPrefix: 23
-  machineCIDR: 192.168.126.0/24
+  machineNetwork:
+  - cidr: 192.168.126.0/24
   networkType: OpenShiftSDN
   serviceNetwork:
   - 172.30.0.0/16
@@ -49,7 +57,8 @@ platform:
   libvirt:
     network:
       if: tt0
-pullSecret: '$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/openshift-pull-secret -H "Metadata-Flavor: Google")'
+publish: External
+pullSecret: $(echo \'"${PULL_SECRET}"\')
 sshKey: |
   $(cat "${PUB_SSH_KEY}")
 EOF
@@ -57,7 +66,12 @@ EOF
 # Create manifests and modify route domain
 openshift-install --dir="$CLUSTER_DIR" create manifests
 # Workaround for https://github.com/openshift/installer/issues/1007
-yq w -i $CLUSTER_DIR/manifests/cluster-ingress-02-config.yml spec[domain] apps.$BASE_DOMAIN
+# Add custom domain to cluster-ingress
+yq write --inplace $CLUSTER_DIR/manifests/cluster-ingress-02-config.yml spec[domain] apps.$BASE_DOMAIN
 
-export TF_VAR_libvirt_master_memory=11024
-openshift-install create cluster --log-level=debug --dir="$CLUSTER_DIR" || openshift-install wait-for install-complete --log-level=debug --dir="$CLUSTER_DIR"
+# Add master memory to 12 GB
+# This is only valid for openshift 4.3 onwards
+yq write --inplace ${CLUSTER_DIR}/openshift/99_openshift-cluster-api_master-machines-0.yaml spec.providerSpec.value[domainMemory] 14336
+
+openshift-install create cluster --log-level=debug --dir="$CLUSTER_DIR" || true
+openshift-install wait-for install-complete --log-level=debug --dir="$CLUSTER_DIR"
