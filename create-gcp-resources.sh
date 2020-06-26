@@ -9,11 +9,9 @@ echo_bright() {
 }
 
 echo "${bold}Creating GCP resources${reset}"
-if [[ -z "$INSTANCE" ]] || [[ -z "$PULL_SECRET" ]] || [[ -z "$GCP_USER" ]]; then
-    echo the following environment variables must be provided:
+if [[ -z "$INSTANCE" ]]; then
+    echo the following environment variable must be provided:
     echo "\$INSTANCE to name gcp resources"
-    echo "\$PULL_SECRET path to your pull-secret"
-    echo "\$GCP_USER your gcp username to scp pull-secret to gcp instance"
     exit 1
 fi
 set -euo pipefail
@@ -35,22 +33,19 @@ gcloud compute firewall-rules create "${INSTANCE}" \
   --network "${INSTANCE}" \
   --allow tcp:22,icmp
 
+# Images are maintained by sally.omalley108@gmail.com
+# image packer-1591907051 built june 11, 2020
+# see IMAGES.md for more information
 echo_bright "Creating instance ${INSTANCE} in project ${PROJECT}"
 gcloud compute instances create "${INSTANCE}" \
-  --image-family okd4-libvirt \
+  --image packer-1591907051 \
+  --image-project okd4-280016 \
   --zone us-east1-c \
   --min-cpu-platform "Intel Haswell" \
   --machine-type n1-standard-16 \
   --boot-disk-type pd-ssd --boot-disk-size 128GB \
   --network "${INSTANCE}" \
   --subnet "${INSTANCE}"
-
-echo_bright "Using scp to copy pull-secret to /home/${GCP_USER}/pull-secret in instance ${INSTANCE}"
-timeout 45s bash -ce 'until \
-    gcloud compute --project "${PROJECT}" scp \
-      --quiet \
-      --zone "${ZONE}" \
-      -- "${PULL_SECRET}" "${GCP_USER}"@"${INSTANCE}":"${HOME}"/pull-secret; do sleep 5; done'
 
 echo "${bold}All resources successfully created${reset}"
 echo "${bold}Use this command to ssh into the VM:${reset}"

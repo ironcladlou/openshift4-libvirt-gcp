@@ -2,32 +2,20 @@
 
 ## Create an [OKD 4](https://www.okd.io) cluster in a single GCP instance.    
 
-**NOTE**      
-This branch is meant for use outside of internal RH GCE environment.  If you are currently a member of    
-`openshift-gce-devel` project, switch to [rhel8 branch](https://github.com/ironcladlou/openshift4-libvirt-gcp/tree/rhel8) and follow README there.
-
-
 ### Prerequisites
 
-Images are built and maintained in `okd4-280016` GCE project.  If you have access to `okd4-280016` GCE project,
-all you need to get started is the [gcloud CLI tool](https://cloud.google.com/sdk/docs/downloads-yum)
-For developers not in `okd4-280016` project, see [here](https://github.com/ironcladlou/openshift4-libvirt-gcp/blob/centos8-okd4/IMAGES.md)
-for information on images, and substitute `your-gce-project` for `okd4-280016` in all scripts. 
+Images are built and maintained in project `okd4-280016` GCE project, and made available to the public.
+All you need to get started is the [gcloud CLI tool](https://cloud.google.com/sdk/docs/downloads-yum)
+If you want to build your own images, see [here](https://github.com/ironcladlou/openshift4-libvirt-gcp/blob/centos8-okd4/IMAGES.md),
+and substitute `your-gce-project` for `okd4-280016` in all scripts. 
 
 ### Create GCP instance
 
 First, create network and firewall rules in GCP and then the GCP instance.
-```
-Note: this script uses scp to copy pull-secret to gcp instance.  Alternative is to
-add pull-secret to metadata when creating the instance.  However, metadata is printed
-in the gcp console.  This is why this setup uses scp instead. 
-```
 You can either run the commands from `create-gcp-resources.sh` individually or run the script like so:
 
 ```shell
 $ export INSTANCE=mytest
-$ export GCP_USER=<whatever name you login as to gcp instance>, used to scp pull-secret to $HOME/pull-secret in gcp instance
-$ export PULL_SECRET=/path/to/pull-secret-one-liner.json
 $ ./create-gcp-resources.sh
 ```
 
@@ -42,7 +30,7 @@ extracted from OKD_RELEASE_IMAGE.
 Install directory will be populated at `$HOME/clusters/$CLUSTER_NAME`
 
 ```shell
-$ gcloud beta compute ssh --zone "us-east1-c" $INSTANCE --project "okd4-280016"
+$ gcloud beta compute ssh --zone "us-east1-c" $INSTANCE --project "your-project"
 $ create-cluster $CLUSTER_NAME
 ```
 
@@ -50,13 +38,15 @@ $ create-cluster $CLUSTER_NAME
 
 You can tear down and relaunch easily within your gcp instance like so:
 ```shell
-$ gcloud beta compute ssh --zone "us-east1-c" $INSTANCE --project "okd4-280016"
+$ gcloud beta compute ssh --zone "us-east1-c" $INSTANCE --project "your-project"
 $ openshift-install destroy cluster --dir ~/clusters/$ClUSTER_NAME && rm -rf ~/clusters/$CLUSTER_NAME
 ```
 
 ### Tear Down and Clean Up GCP.
 
 Clean up your GCP resources when you are done with your development cluster.
+The instance created by the script is centos8-based, n1-standard-16, 128GB.
+If you don't tear it down it will cost you (or your project administrator) a lot of money.
 Check out `teardown-gcp.sh` for individual commands or run the script like so:
 ```shell
 $ INSTANCE=<your gcp instance name> ./teardown-gcp.sh
