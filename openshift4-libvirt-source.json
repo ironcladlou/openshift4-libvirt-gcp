@@ -3,7 +3,8 @@
     "image_family": "openshift4-libvirt-source",
     "source_image_family": "rhel-8",
     "project": "openshift-gce-devel",
-    "zone": "us-east1-c"
+    "zone": "us-east1-c",
+    "network": "ocp4-libvirt-dev"
   },
   "builders": [
     {
@@ -13,13 +14,15 @@
       "source_image_family": "{{ user `source_image_family` }}",
       "image_family": "{{ user `image_family` }}",
       "image_licenses": ["projects/vm-options/global/licenses/enable-vmx"],
-      "ssh_username": "packer"
+      "ssh_username": "packer",
+      "subnetwork": "{{ user `network` }}",
+      "network": "{{ user `network` }}"
     }
   ],
   "provisioners": [{
     "type": "shell",
     "inline": [
-      "sudo yum install -y cloud-utils-growpart"
+      "sudo dnf install -y cloud-utils-growpart"
     ]
   }]
 }
