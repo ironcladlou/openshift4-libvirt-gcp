@@ -6,15 +6,26 @@ if [ -z "$NAME" ]; then
   exit 1
 fi
 
+# TODO: only need RELEASE_IMAGE, but temporarily need both while we transition in CI
+if [[ -z "$RELEASE_IMAGE" ]] && [[ -z "$OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE" ]]; then
+    echo "either \$RELEASE_IMAGE or \$OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE must be provided"
+    exit 1
+fi
+
+if [[ ! -z "$OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE" ]]; then
+    export RELEASE_IMAGE="${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE}"
+    unset OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE
+fi
+
+# extract libvirt installer from release image
+oc adm release extract -a ~/pull-secret --command openshift-baremetal-install "${RELEASE_IMAGE}"
+sudo mv openshift-baremetal-install /usr/local/bin/openshift-install
+
 CLUSTER_DIR="${HOME}/clusters/${NAME}"
 if [ -d "${CLUSTER_DIR}" ]; then
   echo "WARNING: cluster ${NAME} already exists at ${CLUSTER_DIR}"
 else
   mkdir -p ${CLUSTER_DIR}
-fi
-if [[ -z "$OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE" ]]; then
-    echo "\$OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE must be provided"
-    exit 1
 fi
 # Generate a default SSH key if one doesn't exist
 SSH_KEY="${HOME}/.ssh/id_rsa"
