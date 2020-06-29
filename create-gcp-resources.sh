@@ -40,7 +40,7 @@ echo_bright "Creating instance ${INSTANCE} in project ${PROJECT}"
 gcloud compute instances create "${INSTANCE}" \
   --image packer-1591907051 \
   --image-project okd4-280016 \
-  --zone us-east1-c \
+  --zone "${ZONE}" \
   --min-cpu-platform "Intel Haswell" \
   --machine-type n1-standard-16 \
   --boot-disk-type pd-ssd --boot-disk-size 128GB \
