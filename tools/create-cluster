@@ -7,7 +7,7 @@ if [ -z "$NAME" ]; then
 fi
 
 if [[ -z "$OKD_RELEASE_IMAGE" ]]; then
-    export OKD_RELEASE_IMAGE=quay.io/openshift/okd:4.4.0-0.okd-2020-05-23-055148-beta5
+    export OKD_RELEASE_IMAGE=quay.io/openshift/okd:4.5.0-0.okd-2020-06-29-110348-beta6
 fi
 
 # extract libvirt installer from okd image
