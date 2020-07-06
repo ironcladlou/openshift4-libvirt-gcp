@@ -1,0 +1,164 @@
+#!/bin/bash
+
+NAME="$1"
+if [ -z "$NAME" ]; then
+  echo "usage: create-cluster <name>"
+  exit 1
+fi
+
+CLUSTER_DIR="${HOME}/clusters/${NAME}"
+if [ -d "${CLUSTER_DIR}" ]; then
+  echo "WARNING: cluster ${NAME} already exists at ${CLUSTER_DIR}"
+else
+  mkdir -p ${CLUSTER_DIR}
+fi
+# Generate a default SSH key if one doesn't exist
+SSH_KEY="${HOME}/.ssh/id_rsa"
+if [ ! -f $SSH_KEY ]; then
+  ssh-keygen -t rsa -N "" -f $SSH_KEY
+fi
+export BASE_DOMAIN=openshift.testing
+export CLUSTER_NAME="${NAME}"
+export PUB_SSH_KEY="${SSH_KEY}.pub"
+
+# Set up local registry with long-lived certs
+HOSTNAME=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/hostname" -H "Metadata-Flavor: Google")
+sudo dnf -y install podman httpd httpd-tools
+sudo mkdir -p /opt/registry/{auth,certs,data}
+sudo openssl req -newkey rsa:4096 -nodes -sha256 -keyout /opt/registry/certs/domain.key -x509 -days 3650 -out /opt/registry/certs/domain.crt -subj "/C=US/ST=Ohio/L=Columbus/O=Test/OU=IT/CN=${HOSTNAME}"
+CA=$(sudo tail -n +2 /opt/registry/certs/domain.crt | head -n-1 | tr -d '\r\n')
+sudo htpasswd -bBc /opt/registry/auth/htpasswd test test
+sudo firewall-cmd --add-port=5000/tcp --zone=internal --permanent
+sudo firewall-cmd --add-port=5000/tcp --zone=public   --permanent
+sudo firewall-cmd --add-service=http  --permanent
+sudo firewall-cmd --reload
+
+# enable schema version 1 images
+cat > registry-config.yml << EOF
+version: 0.1
+log:
+  fields:
+    service: registry
+storage:
+  cache:
+    blobdescriptor: inmemory
+  filesystem:
+    rootdirectory: /var/lib/registry
+http:
+  addr: :5000
+  headers:
+    X-Content-Type-Options: [nosniff]
+health:
+  storagedriver:
+    enabled: true
+    interval: 10s
+    threshold: 3
+compatibility:
+  schema1:
+    enabled: true
+EOF
+sudo cp registry-config.yml /opt/registry/.
+
+sudo podman run --name test-registry -p 5000:5000 \
+-v /opt/registry/data:/var/lib/registry:z \
+-v /opt/registry/auth:/auth:z \
+-e "REGISTRY_AUTH=htpasswd" \
+-e "REGISTRY_AUTH_HTPASSWD_REALM=Registry" \
+-e "REGISTRY_HTTP_SECRET=ALongRandomSecretForRegistry" \
+-e REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd \
+-v /opt/registry/certs:/certs:z \
+-v /opt/registry/registry-config.yml:/etc/docker/registry/config.yml:z \
+-e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/domain.crt \
+-e REGISTRY_HTTP_TLS_KEY=/certs/domain.key \
+-d docker.io/library/registry:2
+
+sudo cp /opt/registry/certs/domain.crt /etc/pki/ca-trust/source/anchors/
+sudo update-ca-trust extract
+curl -u test:test https://"${HOSTNAME}":5000/v2/_catalog
+
+cp ~/pull-secret ~/pull-secret-new
+podman login -u test -p test --authfile ~/pull-secret-new "${HOSTNAME}":5000
+jq -c < ~/pull-secret-new '.' > ~/pull-secret-one-line
+mv ~/pull-secret-one-line ~/pull-secret
+
+# TODO: Need to determine where to get the build from
+export BUILDNUMBER=$(curl -s https://mirror.openshift.com/pub/openshift-v4/clients/ocp-dev-preview/latest/release.txt | grep 'Name:' | awk '{print $NF}')
+export OCP_RELEASE="${BUILDNUMBER}"
+export LOCAL_REG="${HOSTNAME}:5000"
+export LOCAL_REPO='ocp4/openshift4'
+export UPSTREAM_REPO='openshift-release-dev'
+export PULL_SECRET=$(cat "${HOME}/pull-secret")
+export RELEASE_NAME="ocp-release-nightly"
+
+oc adm release mirror -a ~/pull-secret \
+--from="quay.io/${UPSTREAM_REPO}/${RELEASE_NAME}:${OCP_RELEASE}" \
+--to-release-image="${LOCAL_REG}/${LOCAL_REPO}:${OCP_RELEASE}" \
+--to="${LOCAL_REG}/${LOCAL_REPO}"
+
+# in case it's set in CI job yaml
+unset OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE
+
+# extract libvirt installer from release image
+oc adm release extract -a ~/pull-secret --command openshift-baremetal-install "${LOCAL_REG}/${LOCAL_REPO}:${OCP_RELEASE}"
+sudo mv openshift-baremetal-install /usr/local/bin/openshift-install
+
+cat > "${CLUSTER_DIR}/install-config.yaml" << EOF
+apiVersion: v1
+baseDomain: "${BASE_DOMAIN}"
+compute:
+- hyperthreading: Enabled
+  architecture: amd64
+  name: worker
+  platform: {}
+  replicas: 2
+controlPlane:
+  hyperthreading: Enabled
+  architecture: amd64
+  name: master
+  platform: {}
+  replicas: 3
+metadata:
+  creationTimestamp: null
+  name: "${CLUSTER_NAME}"
+networking:
+  clusterNetwork:
+  - cidr: 10.128.0.0/14
+    hostPrefix: 23
+  machineNetwork:
+  - cidr: 192.168.126.0/24
+  networkType: OpenShiftSDN
+  serviceNetwork:
+  - 172.30.0.0/16
+platform:
+  libvirt:
+    network:
+      if: tt0
+publish: External
+pullSecret: $(echo \'"${PULL_SECRET}"\')
+sshKey: |
+  $(cat "${PUB_SSH_KEY}")
+additionalTrustBundle: |
+  -----BEGIN CERTIFICATE-----
+  $(echo "${CA}")
+  -----END CERTIFICATE-----
+imageContentSources:
+- mirrors:
+  - ${HOSTNAME}:5000/ocp4/openshift4
+  source: quay.io/openshift-release-dev/ocp-release-nightly
+- mirrors:
+  - ${HOSTNAME}:5000/ocp4/openshift4
+  source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
+EOF
+
+# Create manifests and modify route domain
+openshift-install --dir="$CLUSTER_DIR" create manifests
+# Workaround for https://github.com/openshift/installer/issues/1007
+# Add custom domain to cluster-ingress
+yq write --inplace $CLUSTER_DIR/manifests/cluster-ingress-02-config.yml spec[domain] apps.$BASE_DOMAIN
+
+# Add master memory to 12 GB
+# This is only valid for openshift 4.3 onwards
+yq write --inplace ${CLUSTER_DIR}/openshift/99_openshift-cluster-api_master-machines-0.yaml spec.providerSpec.value[domainMemory] 14336
+
+openshift-install create cluster --log-level=debug --dir="$CLUSTER_DIR" || true
+openshift-install wait-for install-complete --log-level=debug --dir="$CLUSTER_DIR"
