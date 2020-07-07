@@ -4,6 +4,8 @@ set -u
 set -o pipefail
 
 echo "Building installer"
+echo "You should always extract the installer from the release payload."
+echo "Building the installer from source may result in failed launch."
 
 REPO_OWNER="${1:-openshift}"
 BRANCH="${2:-master}"

@@ -20,20 +20,7 @@ set -euo pipefail
 
 export ZONE=$(gcloud config get-value compute/zone)
 export PROJECT=$(gcloud config get-value project)
-echo_bright "Creating network ${INSTANCE}"
-gcloud compute networks create "${INSTANCE}" \
-  --subnet-mode=custom \
-  --bgp-routing-mode=regional
-
-echo_bright "Creating subnet for network ${INSTANCE}"
-gcloud compute networks subnets create "${INSTANCE}" \
-  --network "${INSTANCE}" \
-  --range=10.0.0.0/9
-
-echo_bright "Creating firewall rules for network ${INSTANCE}"
-gcloud compute firewall-rules create "${INSTANCE}" \
-  --network "${INSTANCE}" \
-  --allow tcp:22,icmp
+export NETWORK=ocp4-libvirt-dev
 
 echo_bright "Creating instance ${INSTANCE} in project ${PROJECT}"
 gcloud compute instances create "${INSTANCE}" \
@@ -42,8 +29,8 @@ gcloud compute instances create "${INSTANCE}" \
   --min-cpu-platform "Intel Haswell" \
   --machine-type n1-standard-16 \
   --boot-disk-type pd-ssd --boot-disk-size 256GB \
-  --network "${INSTANCE}" \
-  --subnet "${INSTANCE}"
+  --network "${NETWORK}" \
+  --subnet "${NETWORK}"
 
 echo_bright "Using scp to copy pull-secret to /home/${GCP_USER}/pull-secret in instance ${INSTANCE}"
 timeout 45s bash -ce 'until \
@@ -56,5 +43,5 @@ echo "${bold}All resources successfully created${reset}"
 echo "${bold}Use this command to ssh into the VM:${reset}"
 echo_bright "gcloud beta compute ssh --zone ${ZONE} ${INSTANCE} --project ${PROJECT}"
 echo ""
-echo "${bold}To clean up all resources from this script, run:${reset}"
-echo_bright "INSTANCE=${INSTANCE} ./teardown-gcp.sh"
+echo "${bold}To delete the instance, run:${reset}"
+echo_bright "gcloud compute instances delete ${INSTANCE}"

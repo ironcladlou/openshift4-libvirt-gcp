@@ -7,7 +7,9 @@ set -x
 # Install tools
 sudo mv /tmp/tools/* /usr/local/bin
 
-sudo yum install -y libvirt libvirt-devel libvirt-client git libvirt-daemon-kvm qemu-kvm bind-utils jq gcc-c++
+# https://github.com/ironcladlou/openshift4-libvirt-gcp/issues/29
+sudo dnf install -y qemu-kvm-2.12.0-88.module+el8.1.0+5708+85d8e057.3
+sudo dnf install -y libvirt libvirt-devel libvirt-client git libvirt-daemon-kvm bind-utils jq gcc-c++
 
 # Install golang
 curl -L https://dl.google.com/go/go1.13.8.linux-amd64.tar.gz -o go1.13.8.linux-amd64.tar.gz
@@ -90,9 +92,6 @@ tar -zxf oc.tar.gz
 rm -fr oc.tar.gz
 sudo mv $HOME/oc /usr/local/bin
 sudo ln -s /usr/local/bin/oc /usr/local/bin/kubectl
-
-# Install a default installer
-update-installer
 
 sudo bash -c 'cat >> /etc/bashrc' << EOF
 export KUBECONFIG=\$HOME/clusters/nested/auth/kubeconfig
