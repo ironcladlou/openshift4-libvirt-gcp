@@ -7,9 +7,9 @@ set -x
 # Install tools
 sudo mv /tmp/tools/* /usr/local/bin
 
-# https://github.com/ironcladlou/openshift4-libvirt-gcp/issues/29
-sudo dnf install -y qemu-kvm-2.12.0-88.module+el8.1.0+5708+85d8e057.3
 sudo dnf install -y libvirt libvirt-devel libvirt-client git libvirt-daemon-kvm bind-utils jq gcc-c++
+# https://github.com/ironcladlou/openshift4-libvirt-gcp/issues/29
+sudo dnf remove -y qemu-kvm && sudo dnf install -y qemu-kvm-2.12.0-88.module+el8.1.0+5708+85d8e057.3
 
 # Install golang
 curl -L https://dl.google.com/go/go1.13.8.linux-amd64.tar.gz -o go1.13.8.linux-amd64.tar.gz

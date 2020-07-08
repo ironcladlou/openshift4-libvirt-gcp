@@ -17,6 +17,14 @@ if [[ ! -z "$OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE" ]]; then
     unset OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE
 fi
 
+# https://github.com/ironcladlou/openshift4-libvirt-gcp/issues/29
+# gcp image is provisioned with this version, but is auto-updated.
+# rather than turn off auto-upates, downgrade qemu-kvm each go.
+if ! sudo dnf info qemu-kvm | grep -A 5 'Installed Packages' | grep 88.module+el8.1.0+5708+85d8e057.3; then
+    echo "downgrading qemu-kvm to version 2.12.0-88.module+el8.1.0+5708+85d8e057.3"
+    sudo dnf remove -y qemu-kvm && sudo dnf install -y qemu-kvm-2.12.0-88.module+el8.1.0+5708+85d8e057.3
+fi
+
 # extract libvirt installer from release image
 oc adm release extract -a ~/pull-secret --command openshift-baremetal-install "${RELEASE_IMAGE}"
 sudo mv openshift-baremetal-install /usr/local/bin/openshift-install
