@@ -19,19 +19,27 @@ $ export INSTANCE=mytest
 $ ./create-gcp-resources.sh
 ```
 
-### Create nested libvirt cluster - 3 masters, 2 workers
+### Create nested libvirt cluster
 
 Connect to the instance using SSH and create a cluster named `$CLUSTER_NAME` using latest okd4 payload.    
 
-[okd.io](https://www.okd.io/) current release payload image: `quay.io/openshift/okd:4.4.0-0.okd-2020-05-23-055148-beta5`      
+[okd.io](https://www.okd.io/) current release payload image: `quay.io/openshift/okd:4.5.0-0.okd-2020-07-14-153706-ga`    
 To override this image, `export OKD_RELEASE_IMAGE=<a release image you have access to>`.  The libvirt-installer will then be
 extracted from OKD_RELEASE_IMAGE.
 
 Install directory will be populated at `$HOME/clusters/$CLUSTER_NAME`
 
+#### 3 control plane, 2 compute node cluster:
+_you can edit the create-gcp-resources.sh script to launch an n1-standard-16 sized gcp instance_
 ```shell
 $ gcloud beta compute ssh --zone "us-east1-c" $INSTANCE --project "your-project"
 $ create-cluster $CLUSTER_NAME
+```
+
+#### 1 control plane, 0 compute node cluster:
+```shell
+$ gcloud beta compute ssh --zone "us-east1-c" $INSTANCE --project "your-project"
+$ create-single-node-cluster $CLUSTER_NAME
 ```
 
 ### Tear Down Cluster

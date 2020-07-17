@@ -2,7 +2,7 @@
 
 NAME="$1"
 if [ -z "$NAME" ]; then
-  echo "usage: create-cluster <name>"
+  echo "usage: create-single-node-cluster <name>"
   exit 1
 fi
 
@@ -38,13 +38,13 @@ compute:
   architecture: amd64
   name: worker
   platform: {}
-  replicas: 2
+  replicas: 0
 controlPlane:
   hyperthreading: Enabled
   architecture: amd64
   name: master
   platform: {}
-  replicas: 3
+  replicas: 1
 metadata:
   creationTimestamp: null
   name: "${CLUSTER_NAME}"
