@@ -19,7 +19,7 @@
   "provisioners": [{
     "type": "shell",
     "inline": [
-      "sudo yum install -y cloud-utils-growpart"
+      "sudo dnf install -y cloud-utils-growpart"
     ]
   }]
 }

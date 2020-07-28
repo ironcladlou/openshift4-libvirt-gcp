@@ -42,7 +42,7 @@ gcloud compute instances create "${INSTANCE}" \
   --image-project okd4-280016 \
   --zone "${ZONE}" \
   --min-cpu-platform "Intel Haswell" \
-  --machine-type n1-standard-8 \
+  --machine-type n1-standard-4 \
   --boot-disk-type pd-ssd --boot-disk-size 128GB \
   --network "${INSTANCE}" \
   --subnet "${INSTANCE}"

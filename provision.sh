@@ -7,13 +7,7 @@ set -x
 # Install tools
 sudo mv /tmp/tools/* /usr/local/bin
 
-sudo yum install -y libvirt libvirt-devel libvirt-client git libvirt-daemon-kvm qemu-kvm bind-utils jq gcc-c++
-
-# Install golang
-curl -L https://dl.google.com/go/go1.13.8.linux-amd64.tar.gz -o go1.13.8.linux-amd64.tar.gz
-tar -xvf go1.13.8.linux-amd64.tar.gz
-sudo mv go /usr/local
-export PATH=$PATH:/usr/local/go/bin
+sudo dnf install -y libvirt libvirt-devel libvirt-client git libvirt-daemon-kvm qemu-kvm bind-utils jq gcc-c++
 
 # Install yq to manipulate manifest file created by installer.
 if [[ ! -e /usr/local/bin/yq ]]; then
@@ -49,13 +43,13 @@ EOF
 sudo bash -c 'cat >> /etc/sysconfig/libvirtd' << EOF
 LIBVIRTD_ARGS="--listen"
 EOF
-sudo bash -c 'cat >> /etc/modprobe.d/kvm.conf' << EOF
-options kvm_intel nested=1
-EOF
+#sudo bash -c 'cat >> /etc/modprobe.d/kvm.conf' << EOF
+#options kvm_intel nested=1
+#EOF
 # Ensure nesting is enabled in the kernel
 # TODO: verify this is still necessary
-sudo modprobe -r kvm_intel
-sudo modprobe kvm_intel nested=1
+#sudo modprobe -r kvm_intel
+#sudo modprobe kvm_intel nested=1
 sudo systemctl restart libvirtd
 # Set up iptables and firewalld
 # TODO: discover the ports
@@ -90,9 +84,6 @@ tar -zxf oc.tar.gz
 rm -fr oc.tar.gz
 sudo mv $HOME/oc /usr/local/bin
 sudo ln -s /usr/local/bin/oc /usr/local/bin/kubectl
-
-# Extract default installer
-update-installer
 
 sudo bash -c 'cat >> /etc/bashrc' << EOF
 export KUBECONFIG=\$HOME/clusters/nested/auth/kubeconfig
