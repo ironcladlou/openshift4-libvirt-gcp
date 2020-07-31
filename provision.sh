@@ -85,6 +85,7 @@ EOF
 sudo virsh pool-start default
 sudo virsh pool-autostart default
 
+# This will be updated/extracted with the install script
 echo "Installing oc client"
 cd $HOME
 curl -OL https://mirror.openshift.com/pub/openshift-v4/clients/oc/latest/linux/oc.tar.gz
