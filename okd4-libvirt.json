@@ -1,7 +1,7 @@
 {
   "variables": {
-    "image_family": "okd4-libvirt",
-    "source_image_family": "okd4-libvirt-source",
+    "image_family": "okd4-somal",
+    "source_image_family": "okd4-somal-source",
     "project": "okd4-280016",
     "zone": "us-east1-c"
   },

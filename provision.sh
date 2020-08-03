@@ -77,6 +77,7 @@ EOF
 sudo virsh pool-start default
 sudo virsh pool-autostart default
 
+# This will be replaced by oc extracted from installer in create-cluster
 echo "Installing oc client"
 cd $HOME
 curl -OL https://mirror.openshift.com/pub/openshift-v4/clients/oc/latest/linux/oc.tar.gz
@@ -87,5 +88,4 @@ sudo ln -s /usr/local/bin/oc /usr/local/bin/kubectl
 
 sudo bash -c 'cat >> /etc/bashrc' << EOF
 export KUBECONFIG=\$HOME/clusters/nested/auth/kubeconfig
-export PATH=$PATH:/usr/local/go/bin
 EOF

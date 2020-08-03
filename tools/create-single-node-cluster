@@ -8,12 +8,16 @@ fi
 
 # https://origin-release.apps.ci.l2s4.p1.openshiftapps.com/#4.5.0-0.okd
 if [[ -z "$OKD_RELEASE_IMAGE" ]]; then
-    export OKD_RELEASE_IMAGE=quay.io/openshift/okd:4.5.0-0.okd-2020-07-14-153706-ga
+    export OKD_RELEASE_IMAGE=quay.io/openshift/okd:4.5.0-0.okd-2020-07-29-070316
 fi
 
 # extract libvirt installer from okd image
-oc adm release extract --command openshift-baremetal-install "${OKD_RELEASE_IMAGE}" 
+oc adm release extract --command openshift-baremetal-install "${OKD_RELEASE_IMAGE}"
 sudo mv openshift-baremetal-install /usr/local/bin/openshift-install 
+
+# extract oc from okd image
+oc adm release extract --command oc "${OKD_RELEASE_IMAGE}"
+sudo mv oc /usr/local/bin/oc
 
 CLUSTER_DIR="${HOME}/clusters/${NAME}"
 if [ -d "${CLUSTER_DIR}" ]; then

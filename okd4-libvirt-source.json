@@ -1,6 +1,6 @@
 {
   "variables": {
-    "image_family": "okd4-libvirt-source",
+    "image_family": "okd4-somal-source",
     "source_image_family": "centos-8",
     "project": "okd4-280016",
     "zone": "us-east1-c"
