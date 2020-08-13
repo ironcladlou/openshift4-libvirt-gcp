@@ -13,7 +13,7 @@ Images are built with [Packer](https://www.packer.io). Override variables as nec
 The source image is `rhel8` with [nested virtualization enabled](https://cloud.google.com/compute/docs/instances/enable-nested-virtualization-vm-instances#restrictions).
 
 ```shell
-$ packer build okd4-somal-source.json
+$ packer build okd4-libvirt-source.json
 ```
 
 To override any default variable value, for example, Google Project ID:
@@ -27,7 +27,7 @@ $ packer build -var 'project=your-google-project-id' okd4-libvirt-source.json
 The provisioned image implements all the [OpenShift libvirt HOWTO](https://github.com/openshift/installer/blob/master/docs/dev/libvirt-howto.md) requirements.
 
 ```shell
-$ packer build okd4-libvirt-source.json
+$ packer build okd4-libvirt.json
 ```
 To override any default variable value, for example, Google Project ID:
 
