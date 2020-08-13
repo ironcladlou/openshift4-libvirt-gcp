@@ -23,11 +23,6 @@ export ZONE=$(gcloud config get-value compute/zone)
 export PROJECT=$(gcloud config get-value project)
 export NETWORK=somaltest
 
-echo_bright "Creating firewall rules for network ${INSTANCE}"
-gcloud compute firewall-rules create "${INSTANCE}" \
-  --network "${NETWORK}" \
-  --allow tcp:22,icmp
-
 # Images are maintained by sally.omalley108@gmail.com
 # see IMAGES.md for more information
 echo_bright "Creating instance ${INSTANCE} in project ${PROJECT}"
@@ -35,7 +30,7 @@ gcloud compute instances create "${INSTANCE}" \
   --image-family okd4-somal \
   --zone "${ZONE}" \
   --min-cpu-platform "Intel Haswell" \
-  --machine-type n1-standard-4 \
+  --machine-type n1-standard-8 \
   --boot-disk-type pd-ssd --boot-disk-size 128GB \
   --network "${NETWORK}" \
   --subnet "${NETWORK}"

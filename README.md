@@ -5,9 +5,9 @@
 ### Prerequisites
 
 Images are built and maintained in project `okd4-280016` GCE project, and made available to the public.
+For OpenShift developers, images are built in `openshift-gce-devel` project.    
 All you need to get started is the [gcloud CLI tool](https://cloud.google.com/sdk/docs/downloads-yum)
-If you want to build your own images, see [here](https://github.com/ironcladlou/openshift4-libvirt-gcp/blob/centos8-okd4/IMAGES.md),
-and substitute `your-gce-project` for `okd4-280016` in all scripts. 
+For information on images, see [here](https://github.com/ironcladlou/openshift4-libvirt-gcp/blob/rhel8-okd4/IMAGES.md).
 
 ### Create GCP instance
 
@@ -18,28 +18,36 @@ You can either run the commands from `create-gcp-resources.sh` individually or r
 $ export INSTANCE=mytest
 $ ./create-gcp-resources.sh
 ```
+If you are an OpenShift developer and have access to `openshift-gce-devel` project,   
+you do not need to create network and firewall rules.
+You can either run the commands from `create-gcp-resources.sh` individually or run the script like so:
+
+```shell
+$ export INSTANCE=mytest
+$ ./create-gcp-resources-internal.sh
+```
 
 ### Create nested libvirt cluster
 
 Connect to the instance using SSH and create a cluster named `$CLUSTER_NAME` using latest okd4 payload.    
 
-[okd.io](https://www.okd.io/) current release payload image: `quay.io/openshift/okd:4.5.0-0.okd-2020-07-14-153706-ga`    
+[okd.io](https://www.okd.io/) current release payload image: `quay.io/openshift/okd:4.5.0-0.okd-2020-07-29-070316`    
 To override this image, `export OKD_RELEASE_IMAGE=<a release image you have access to>`.  The libvirt-installer will then be
 extracted from OKD_RELEASE_IMAGE.
 
 Install directory will be populated at `$HOME/clusters/$CLUSTER_NAME`
 
 #### 3 control plane, 2 compute node cluster:
-_you can edit the create-gcp-resources.sh script to launch an n1-standard-16 sized gcp instance_
+_you need to edit the create-gcp-resources.sh script to launch an n1-standard-16 sized gcp instance_
 ```shell
 $ gcloud beta compute ssh --zone "us-east1-c" $INSTANCE --project "your-project"
-$ create-cluster $CLUSTER_NAME
+$ create-cluster -n $CLUSTER_NAME
 ```
 
 #### 1 control plane, 0 compute node cluster:
 ```shell
 $ gcloud beta compute ssh --zone "us-east1-c" $INSTANCE --project "your-project"
-$ create-single-node-cluster $CLUSTER_NAME
+$ create-cluster -n $CLUSTER_NAME -f single-node
 ```
 
 ### Tear Down Cluster
@@ -53,7 +61,7 @@ $ openshift-install destroy cluster --dir ~/clusters/$ClUSTER_NAME && rm -rf ~/c
 ### Tear Down and Clean Up GCP.
 
 Clean up your GCP resources when you are done with your development cluster.
-The instance created by the script is centos8-based, n1-standard-16, 128GB.
+The instance created by the script is rhel8-based, n1-standard-16, 128GB.
 If you don't tear it down it will cost you (or your project administrator) a lot of money.
 Check out `teardown-gcp.sh` for individual commands or run the script like so:
 ```shell

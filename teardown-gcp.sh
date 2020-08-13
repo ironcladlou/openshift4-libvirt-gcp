@@ -20,7 +20,7 @@ if [ "$x" != "Y" ]; then
 fi
 set -x
 gcloud compute instances delete "${INSTANCE}" --quiet
-gcloud compute firewall-rules delete "${INSTANCE}" --quiet
 # if using openshift-gce-devel project, network,subnet not created
+gcloud compute firewall-rules delete "${INSTANCE}" --quiet
 gcloud compute networks subnets delete "${INSTANCE}" --quiet
 gcloud compute networks delete "${INSTANCE}" --quiet
