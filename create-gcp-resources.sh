@@ -34,15 +34,15 @@ gcloud compute firewall-rules create "${INSTANCE}" \
   --allow tcp:22,icmp
 
 # Images are maintained by sally.omalley108@gmail.com
-# image okd-4-5-0-0-okd-2020-06-29-110348-beta6 built june 29, 2020
+# image packer-1597358211 built August 13, 2020
 # see IMAGES.md for more information
 echo_bright "Creating instance ${INSTANCE} in project ${PROJECT}"
 gcloud compute instances create "${INSTANCE}" \
-  --image okd-4-5-0-0-okd-2020-06-29-110348-beta6 \
+  --image packer-1597358211 \
   --image-project okd4-280016 \
   --zone "${ZONE}" \
   --min-cpu-platform "Intel Haswell" \
-  --machine-type n1-standard-4 \
+  --machine-type n1-standard-8 \
   --boot-disk-type pd-ssd --boot-disk-size 128GB \
   --network "${INSTANCE}" \
   --subnet "${INSTANCE}"
