@@ -3,12 +3,14 @@
     "image_family": "okd4-somal",
     "source_image_family": "okd4-somal-source",
     "project": "okd4-280016",
-    "zone": "us-east1-c"
+    "zone": "us-east1-c",
+    "account_file": "/home/somalley/installer/okd4-packer.json"
   },
   "builders": [
     {
       "type": "googlecompute",
       "project_id": "{{ user `project` }}",
+      "account_file": "{{ user `account_file` }}",
       "zone": "{{ user `zone` }}",
       "source_image_family": "{{ user `source_image_family` }}",
       "image_family": "{{ user `image_family` }}",
