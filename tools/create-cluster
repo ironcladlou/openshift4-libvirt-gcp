@@ -29,6 +29,10 @@ fi
 oc adm release extract -a ~/pull-secret --command openshift-baremetal-install "${RELEASE_IMAGE}"
 sudo mv openshift-baremetal-install /usr/local/bin/openshift-install
 
+# extract oc from release image
+oc adm release extract -a ~/pull-secret --command oc "${RELEASE_IMAGE}"
+sudo mv oc /usr/local/bin/oc
+
 CLUSTER_DIR="${HOME}/clusters/${NAME}"
 if [ -d "${CLUSTER_DIR}" ]; then
   echo "WARNING: cluster ${NAME} already exists at ${CLUSTER_DIR}"
