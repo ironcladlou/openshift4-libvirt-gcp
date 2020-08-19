@@ -38,16 +38,9 @@ extracted from OKD_RELEASE_IMAGE.
 Install directory will be populated at `$HOME/clusters/$CLUSTER_NAME`
 
 #### 3 control plane, 2 compute node cluster:
-_you need to edit the create-gcp-resources.sh script to launch an n1-standard-16 sized gcp instance_
 ```shell
 $ gcloud beta compute ssh --zone "us-east1-c" $INSTANCE --project "your-project"
 $ create-cluster -n $CLUSTER_NAME
-```
-
-#### 1 control plane, 0 compute node cluster:
-```shell
-$ gcloud beta compute ssh --zone "us-east1-c" $INSTANCE --project "your-project"
-$ create-cluster -n $CLUSTER_NAME -f single-node
 ```
 
 ### Tear Down Cluster

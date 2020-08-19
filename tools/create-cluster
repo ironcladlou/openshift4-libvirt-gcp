@@ -1,29 +1,8 @@
 #!/bin/bash
 
-NAME=""
-SINGLE_NODE=false
-while getopts "f:n:" OPTION
-do
-	case $OPTION in
-	  f)
-        if [ $OPTARG == "single-node" ]; then
-	      SINGLE_NODE=true
-        else
-          echo "Invalid flag passed: the only flag accepted is '-f single-node'"
-          exit 1
-        fi
-	    ;;
-	  n)
-	    NAME=$OPTARG
-	    ;;
-      *)
-        echo -n "Unknown option passed: the only accepted options are '-f single-node' and '-n <cluster-name>'"
-        exit 1
-        ;;
-	esac
-done
+NAME="$1"
 if [ -z "$NAME" ]; then
-  echo "usage: create-cluster -n <cluster-name> or create-cluster -n <cluster-name> -f single-node"
+  echo "usage: create-cluster <cluster-name>"
   exit 1
 fi
 # https://github.com/ironcladlou/openshift4-libvirt-gcp/issues/29
@@ -62,8 +41,7 @@ export BASE_DOMAIN=openshift.testing
 export CLUSTER_NAME="${NAME}"
 export PUB_SSH_KEY="${SSH_KEY}.pub"
 
-if [ $SINGLE_NODE == false ]; then
-  cat > "${CLUSTER_DIR}/install-config.yaml" << EOF
+cat > "${CLUSTER_DIR}/install-config.yaml" << EOF
 apiVersion: v1
 baseDomain: "${BASE_DOMAIN}"
 compute:
@@ -99,44 +77,6 @@ pullSecret: '{"auths":{"not-required":{"auth":"notrequired","email":"public@open
 sshKey: |
   $(cat "${PUB_SSH_KEY}")
 EOF
-else
-  cat > "${CLUSTER_DIR}/install-config.yaml" << EOF
-apiVersion: v1
-baseDomain: "${BASE_DOMAIN}"
-compute:
-- hyperthreading: Enabled
-  architecture: amd64
-  name: worker
-  platform: {}
-  replicas: 0
-controlPlane:
-  hyperthreading: Enabled
-  architecture: amd64
-  name: master
-  platform: {}
-  replicas: 1
-metadata:
-  creationTimestamp: null
-  name: "${CLUSTER_NAME}"
-networking:
-  clusterNetwork:
-  - cidr: 10.128.0.0/14
-    hostPrefix: 23
-  machineNetwork:
-  - cidr: 192.168.126.0/24
-  networkType: OpenShiftSDN
-  serviceNetwork:
-  - 172.30.0.0/16
-platform:
-  libvirt:
-    network:
-      if: tt0
-publish: External
-pullSecret: '{"auths":{"not-required":{"auth":"notrequired","email":"public@open.com"}}}'
-sshKey: |
-  $(cat "${PUB_SSH_KEY}")
-EOF
-fi
 
 # Create manifests and modify route domain
 openshift-install --dir="$CLUSTER_DIR" create manifests
