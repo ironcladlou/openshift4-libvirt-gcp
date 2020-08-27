@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# This script is meant to run in openshift-gce-devel project
+# If not in openshift-gce-devel, the network and subnet will need to be created.
+# For network, subnet creation see create-network-and-subnet.sh
+
 bold=$(tput bold)
 bright=$(tput setaf 14)
 reset=$(tput sgr0)
@@ -20,6 +24,7 @@ set -euo pipefail
 
 export ZONE=$(gcloud config get-value compute/zone)
 export PROJECT=$(gcloud config get-value project)
+# This network is in openshift-gce-devel project
 export NETWORK=ocp4-libvirt-dev
 
 echo_bright "Creating instance ${INSTANCE} in project ${PROJECT}"
