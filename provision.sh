@@ -9,6 +9,7 @@ sudo mv /tmp/tools/* /usr/local/bin
 
 sudo dnf install -y python3-dnf-plugin-versionlock
 # https://github.com/ironcladlou/openshift4-libvirt-gcp/issues/29
+# https://bugzilla.redhat.com/show_bug.cgi?id=1843970
 sudo dnf versionlock add qemu-kvm-2.12.0-88.module+el8.1.0+5708+85d8e057.3
 sudo dnf install -y libvirt libvirt-devel libvirt-client git libvirt-daemon-kvm bind-utils jq gcc-c++
 
