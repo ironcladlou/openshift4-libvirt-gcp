@@ -21,9 +21,6 @@ export BASE_DOMAIN=openshift.testing
 export CLUSTER_NAME="${NAME}"
 export PUB_SSH_KEY="${SSH_KEY}.pub"
 
-# Set up local registry with long-lived certs
-HOSTNAME=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/hostname" -H "Metadata-Flavor: Google")
-sudo dnf -y install podman httpd httpd-tools
 # https://github.com/ironcladlou/openshift4-libvirt-gcp/issues/29
 # gcp image is provisioned with this version, but is auto-updated.
 # rather than turn off auto-upates, downgrade qemu-kvm each go.
@@ -32,14 +29,90 @@ if ! sudo dnf info qemu-kvm | grep -A 5 'Installed Packages' | grep 88.module+el
     sudo dnf remove -y qemu-kvm && sudo dnf install -y qemu-kvm-2.12.0-88.module+el8.1.0+5708+85d8e057.3
 fi
 
-sudo mkdir -p /opt/registry/{auth,certs,data}
-sudo openssl req -newkey rsa:4096 -nodes -sha256 -keyout /opt/registry/certs/domain.key -x509 -days 3650 -out /opt/registry/certs/domain.crt -subj "/C=US/ST=Ohio/L=Columbus/O=Test/OU=IT/CN=${HOSTNAME}"
-CA=$(sudo tail -n +2 /opt/registry/certs/domain.crt | head -n-1 | tr -d '\r\n')
-sudo htpasswd -bBc /opt/registry/auth/htpasswd test test
-sudo firewall-cmd --add-port=5000/tcp --zone=internal --permanent
-sudo firewall-cmd --add-port=5000/tcp --zone=public   --permanent
-sudo firewall-cmd --add-service=http  --permanent
-sudo firewall-cmd --reload
+# Set up local registry with long-lived certs with SAN
+HOSTNAME=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/hostname" -H "Metadata-Flavor: Google")
+sudo dnf -y install podman httpd httpd-tools make
+go get -u github.com/cloudflare/cfssl/cmd/...
+pushd go/src/github.com/cloudflare/cfssl
+make
+popd
+sudo cp go/src/github.com/cloudflare/cfssl/bin/cfssl /usr/local/bin
+sudo cp go/src/github.com/cloudflare/cfssl/bin/cfssljson /usr/local/bin
+mkdir create-registry-certs
+pushd create-registry-certs
+cat > ca-config.json << EOF
+{
+    "signing": {
+        "default": {
+            "expiry": "87600h"
+        },
+        "profiles": {
+            "server": {
+                "expiry": "87600h",
+                "usages": [
+                    "signing",
+                    "key encipherment",
+                    "server auth"
+                ]
+            },
+            "client": {
+                "expiry": "87600h",
+                "usages": [
+                    "signing",
+                    "key encipherment",
+                    "client auth"
+                ]
+            }
+        }
+    }
+}
+EOF
+
+cat > ca-csr.json << EOF
+{
+    "CN": "Test Registry Self Signed CA",
+    "hosts": [
+        "${HOSTNAME}"
+    ],
+    "key": {
+        "algo": "rsa",
+        "size": 2048
+    },
+    "names": [
+        {
+            "C": "US",
+            "ST": "CA",
+            "L": "San Francisco"
+        }
+    ]
+}
+EOF
+
+cat > server.json << EOF
+{
+    "CN": "Test Registry Self Signed CA",
+    "hosts": [
+        "${HOSTNAME}"
+    ],
+    "key": {
+        "algo": "ecdsa",
+        "size": 256
+    },
+    "names": [
+        {
+            "C": "US",
+            "ST": "CA",
+            "L": "San Francisco"
+        }
+    ]
+}
+EOF
+
+# generate ca-key.pem, ca.csr, ca.pem
+cfssl gencert -initca ca-csr.json | cfssljson -bare ca -
+
+# generate server-key.pem, server.csr, server.pem
+cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=server server.json | cfssljson -bare server
 
 # enable schema version 1 images
 cat > registry-config.yml << EOF
@@ -65,8 +138,23 @@ compatibility:
   schema1:
     enabled: true
 EOF
-sudo cp registry-config.yml /opt/registry/.
 
+sudo mkdir -p /opt/registry/{auth,certs,data}
+sudo firewall-cmd --add-port=5000/tcp --zone=internal --permanent
+sudo firewall-cmd --add-port=5000/tcp --zone=public   --permanent
+sudo firewall-cmd --add-service=http  --permanent
+sudo firewall-cmd --reload
+
+CA=$(sudo tail -n +2 ca.pem | head -n-1 | tr -d '\r\n')
+sudo htpasswd -bBc /opt/registry/auth/htpasswd test test
+sudo cp registry-config.yml /opt/registry/.
+sudo cp server-key.pem /opt/registry/certs/.
+sudo cp server.pem /opt/registry/certs/.
+sudo cp /opt/registry/certs/server.pem /etc/pki/ca-trust/source/anchors/
+sudo cp ca.pem /etc/pki/ca-trust/source/anchors/
+sudo update-ca-trust extract
+
+# Now that certs are in place, run the local image registry
 sudo podman run --name test-registry -p 5000:5000 \
 -v /opt/registry/data:/var/lib/registry:z \
 -v /opt/registry/auth:/auth:z \
@@ -76,12 +164,12 @@ sudo podman run --name test-registry -p 5000:5000 \
 -e REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd \
 -v /opt/registry/certs:/certs:z \
 -v /opt/registry/registry-config.yml:/etc/docker/registry/config.yml:z \
--e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/domain.crt \
--e REGISTRY_HTTP_TLS_KEY=/certs/domain.key \
+-e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/server.pem \
+-e REGISTRY_HTTP_TLS_KEY=/certs/server-key.pem \
 -d docker.io/library/registry:2
 
-sudo cp /opt/registry/certs/domain.crt /etc/pki/ca-trust/source/anchors/
-sudo update-ca-trust extract
+popd
+sleep 5
 curl -u test:test https://"${HOSTNAME}":5000/v2/_catalog
 
 cp ~/pull-secret ~/pull-secret-new
@@ -109,6 +197,10 @@ unset OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE
 # extract libvirt installer from release image
 oc adm release extract -a ~/pull-secret --command openshift-baremetal-install "${LOCAL_REG}/${LOCAL_REPO}:${OCP_RELEASE}"
 sudo mv openshift-baremetal-install /usr/local/bin/openshift-install
+
+# extract oc from release image
+oc adm release extract -a ~/pull-secret --command oc "${LOCAL_REG}/${LOCAL_REPO}:${OCP_RELEASE}"
+sudo mv oc /usr/local/bin/oc
 
 cat > "${CLUSTER_DIR}/install-config.yaml" << EOF
 apiVersion: v1
