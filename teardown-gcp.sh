@@ -11,6 +11,7 @@ echo_bright() {
 echo_bright "Cleaning up GCP"
 if [[ -z "$INSTANCE" ]]; then
      echo "\$INSTANCE must be provided"
+     exit 1
 fi
 echo "This script will remove ${bright}${bold}$INSTANCE${reset} GCP instance."
 echo "${bold}Do you want to continue (Y/n)?${reset}"

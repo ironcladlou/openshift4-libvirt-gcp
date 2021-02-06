@@ -14,8 +14,8 @@ sudo dnf versionlock add qemu-kvm-2.12.0-88.module+el8.1.0+5708+85d8e057.3
 sudo dnf install -y libvirt libvirt-devel libvirt-client git libvirt-daemon-kvm bind-utils jq gcc-c++
 
 # Install golang
-curl -L https://dl.google.com/go/go1.13.8.linux-amd64.tar.gz -o go1.13.8.linux-amd64.tar.gz
-tar -xvf go1.13.8.linux-amd64.tar.gz
+curl -L https://dl.google.com/go/go1.15.8.linux-amd64.tar.gz -o go1.15.8.linux-amd64.tar.gz
+tar -xvf go1.15.8.linux-amd64.tar.gz
 sudo mv go /usr/local
 export PATH=$PATH:/usr/local/go/bin
 
@@ -34,15 +34,12 @@ sudo sysctl -p /etc/sysctl.d/99-ipforward.conf
 
 # Configure libvirt to accept TCP connections
 # https://github.com/openshift/installer/tree/master/docs/dev/libvirt#configure-libvirt-to-accept-tcp-connections
+sudo systemctl start libvirtd-tcp.socket
+sudo systemctl enable libvirtd-tcp.socket
 sudo bash -c 'cat >> /etc/libvirt/libvirtd.conf' << EOF
-listen_tls = 0
-listen_tcp = 1
-auth_tcp="none"
-tcp_port = "16509"
+auth_tcp = "none"
 EOF
-sudo bash -c 'cat >> /etc/sysconfig/libvirtd' << EOF
-LIBVIRTD_ARGS="--listen"
-EOF
+sudo systemctl restart libvirtd
 sudo bash -c 'cat >> /etc/modprobe.d/kvm.conf' << EOF
 options kvm_intel nested=1
 EOF
@@ -52,7 +49,7 @@ sudo modprobe -r kvm_intel
 sudo modprobe kvm_intel nested=1
 sudo systemctl restart libvirtd
 # Set up iptables and firewalld
-# TODO: discover the ports
+sudo iptables -I INPUT -p tcp -s 192.168.126.0/24 -d 192.168.122.1 --dport 16509 -j ACCEPT -m comment --comment "Allow insecure libvirt clients"
 sudo firewall-cmd --permanent --add-rich-rule "rule service name="libvirt" reject"
 sudo firewall-cmd --permanent --zone=libvirt --add-service=libvirt
 sudo firewall-cmd --zone=libvirt --add-service=libvirt --permanent
