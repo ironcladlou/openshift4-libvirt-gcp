@@ -7,13 +7,7 @@ set -x
 # Install tools
 sudo mv /tmp/tools/* /usr/local/bin
 
-sudo dnf install -y libvirt libvirt-devel libvirt-client git libvirt-daemon-kvm bind-utils jq gcc-c++
-
-# Install golang
-curl -L https://dl.google.com/go/go1.13.8.linux-amd64.tar.gz -o go1.13.8.linux-amd64.tar.gz
-tar -xvf go1.13.8.linux-amd64.tar.gz
-sudo mv go /usr/local
-export PATH=$PATH:/usr/local/go/bin
+sudo dnf install -y libvirt libvirt-devel libvirt-client git libvirt-daemon-kvm bind-utils jq gcc-c++ golang
 
 # Install yq to manipulate manifest file created by installer.
 if [[ ! -e /usr/local/bin/yq ]]; then
