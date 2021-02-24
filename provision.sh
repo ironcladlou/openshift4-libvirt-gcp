@@ -7,17 +7,7 @@ set -x
 # Install tools
 sudo mv /tmp/tools/* /usr/local/bin
 
-sudo dnf install -y python3-dnf-plugin-versionlock
-# https://github.com/ironcladlou/openshift4-libvirt-gcp/issues/29
-# https://bugzilla.redhat.com/show_bug.cgi?id=1843970
-sudo dnf versionlock add qemu-kvm-2.12.0-88.module+el8.1.0+5708+85d8e057.3
-sudo dnf install -y libvirt libvirt-devel libvirt-client git libvirt-daemon-kvm bind-utils jq gcc-c++
-
-# Install golang
-curl -L https://dl.google.com/go/go1.13.8.linux-amd64.tar.gz -o go1.13.8.linux-amd64.tar.gz
-tar -xvf go1.13.8.linux-amd64.tar.gz
-sudo mv go /usr/local
-export PATH=$PATH:/usr/local/go/bin
+sudo dnf install -y libvirt libvirt-devel libvirt-client git libvirt-daemon-kvm bind-utils jq gcc-c++ golang
 
 # Install yq to manipulate manifest file created by installer.
 if [[ ! -e /usr/local/bin/yq ]]; then
@@ -35,14 +25,12 @@ sudo sysctl -p /etc/sysctl.d/99-ipforward.conf
 # Configure libvirt to accept TCP connections
 # https://github.com/openshift/installer/tree/master/docs/dev/libvirt#configure-libvirt-to-accept-tcp-connections
 sudo bash -c 'cat >> /etc/libvirt/libvirtd.conf' << EOF
-listen_tls = 0
-listen_tcp = 1
 auth_tcp="none"
-tcp_port = "16509"
 EOF
-sudo bash -c 'cat >> /etc/sysconfig/libvirtd' << EOF
-LIBVIRTD_ARGS="--listen"
-EOF
+
+sudo systemctl enable libvirtd-tcp.socket
+sudo systemctl start libvirtd-tcp.socket
+
 sudo bash -c 'cat >> /etc/modprobe.d/kvm.conf' << EOF
 options kvm_intel nested=1
 EOF
