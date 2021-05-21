@@ -58,9 +58,9 @@ sudo systemctl restart NetworkManager
 
 echo "Installing oc client"
 cd $HOME
-curl -OL https://mirror.openshift.com/pub/openshift-v4/clients/oc/latest/linux/oc.tar.gz
-tar -zxf oc.tar.gz
-rm -fr oc.tar.gz
+curl -OL https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/openshift-client-linux.tar.gz
+tar -zxf openshift-client-linux.tar.gz
+rm -fr openshift-client-linux.tar.gz
 sudo mv $HOME/oc /usr/local/bin
 sudo ln -s /usr/local/bin/oc /usr/local/bin/kubectl
 
