@@ -7,6 +7,9 @@ set -x
 # Install tools
 sudo mv /tmp/tools/* /usr/local/bin
 
+# Remove the dnf-automatic package
+sudo dnf remove -y dnf-automatic
+
 sudo dnf install -y libvirt libvirt-devel libvirt-client git libvirt-daemon-kvm bind-utils jq gcc-c++ golang
 
 # Install yq to manipulate manifest file created by installer.
