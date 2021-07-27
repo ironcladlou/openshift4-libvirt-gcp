@@ -12,6 +12,9 @@ sudo dnf remove -y dnf-automatic
 
 sudo dnf install -y libvirt libvirt-devel libvirt-client git libvirt-daemon-kvm bind-utils jq gcc-c++ golang
 
+# Install tools needed by crc/snc to workaround intermittent `yum install` network failures during some CI runs
+sudo dnf install -y make tmux unzip podman rsync libguestfs-tools-c zstd httpd-tools patch
+
 # Install yq to manipulate manifest file created by installer.
 if [[ ! -e /usr/local/bin/yq ]]; then
     curl -L https://github.com/mikefarah/yq/releases/download/2.2.1/yq_linux_amd64 -o yq
