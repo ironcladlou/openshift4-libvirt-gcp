@@ -30,12 +30,11 @@ sudo sysctl -p /etc/sysctl.d/99-ipforward.conf
 
 # Configure libvirt to accept TCP connections
 # https://github.com/openshift/installer/tree/master/docs/dev/libvirt#configure-libvirt-to-accept-tcp-connections
-sudo bash -c 'cat >> /etc/libvirt/libvirtd.conf' << EOF
+sudo bash -c 'cat >> /etc/libvirt/virtproxyd.conf' << EOF
 auth_tcp="none"
 EOF
 
-sudo systemctl enable libvirtd-tcp.socket
-sudo systemctl start libvirtd-tcp.socket
+sudo systemctl enable --now virtproxyd-tcp.socket
 
 sudo bash -c 'cat >> /etc/modprobe.d/kvm.conf' << EOF
 options kvm_intel nested=1
@@ -44,7 +43,6 @@ EOF
 # TODO: verify this is still necessary
 sudo modprobe -r kvm_intel
 sudo modprobe kvm_intel nested=1
-sudo systemctl restart libvirtd
 # Set up iptables and firewalld
 # TODO: discover the ports
 sudo firewall-cmd --permanent --add-rich-rule "rule service name="libvirt" reject"
