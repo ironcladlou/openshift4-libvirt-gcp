@@ -12,7 +12,10 @@ Images are built with [Packer](https://www.packer.io). Override variables as nec
 
 The source image is `rhel9` with [nested virtualization enabled](https://cloud.google.com/compute/docs/instances/enable-nested-virtualization-vm-instances#restrictions).
 
+To use packer with GCP, you first need to set [application default credentials](https://cloud.google.com/docs/authentication/application-default-credentials)
+
 ```shell
+$ export GOOGLE_APPLICATION_CREDENTIALS=<service account key file path>
 $ packer build openshift4-libvirt-source.json
 ```
 
