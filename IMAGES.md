@@ -10,7 +10,7 @@ Images are built with [Packer](https://www.packer.io). Override variables as nec
 
 ### Source image
 
-The source image is `rhel8` with [nested virtualization enabled](https://cloud.google.com/compute/docs/instances/enable-nested-virtualization-vm-instances#restrictions).
+The source image is `rhel9` with [nested virtualization enabled](https://cloud.google.com/compute/docs/instances/enable-nested-virtualization-vm-instances#restrictions).
 
 ```shell
 $ packer build openshift4-libvirt-source.json
