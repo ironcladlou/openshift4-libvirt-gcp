@@ -10,7 +10,7 @@ sudo mv /tmp/tools/* /usr/local/bin
 # Remove the dnf-automatic package
 sudo dnf remove -y dnf-automatic
 
-sudo dnf install -y libvirt libvirt-devel libvirt-client git libvirt-daemon-kvm bind-utils jq gcc-c++ golang
+sudo dnf install -y libvirt libvirt-client git libvirt-daemon-kvm bind-utils jq gcc-c++ golang
 
 # Install tools needed by crc/snc to workaround intermittent `yum install` network failures during some CI runs
 sudo dnf install -y make tmux unzip podman rsync libguestfs-tools-c zstd httpd-tools patch
