@@ -1,7 +1,7 @@
 {
   "variables": {
-    "image_family": "openshift4-libvirt",
-    "source_image_family": "openshift4-libvirt-source",
+    "image_family": "openshift4-libvirt-rhel9",
+    "source_image_family": "openshift4-libvirt-source-rhel9",
     "project": "openshift-gce-devel",
     "zone": "us-east1-c",
     "network": "ocp4-libvirt-dev"

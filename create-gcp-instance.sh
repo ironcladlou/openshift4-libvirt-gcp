@@ -29,7 +29,7 @@ export NETWORK=ocp4-libvirt-dev
 
 echo_bright "Creating instance ${INSTANCE} in project ${PROJECT}"
 gcloud compute instances create "${INSTANCE}" \
-  --image-family openshift4-libvirt \
+  --image-family openshift4-libvirt-rhel9 \
   --zone us-east1-c \
   --min-cpu-platform "Intel Haswell" \
   --machine-type n1-standard-16 \
