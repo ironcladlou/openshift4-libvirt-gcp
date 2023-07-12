@@ -35,6 +35,8 @@ auth_tcp="none"
 EOF
 
 sudo systemctl enable --now virtproxyd-tcp.socket
+# Enable the virtnetworkd service so that default network active as part of startup
+sudo systemctl enable --now virtnetworkd.service
 
 sudo bash -c 'cat >> /etc/modprobe.d/kvm.conf' << EOF
 options kvm_intel nested=1
